@@ -8,11 +8,14 @@ Dönüştürme tamamen **tarayıcıda** ([ffmpeg.wasm](https://github.com/ffmpeg
 1. X/Giphy linkini yapıştır ya da GIF/video dosyasını seç → **Hazırla**
 2. **WhatsApp'a gönder** (telefonda paylaşım ekranı açılır; bilgisayarda GIF indirilir)
 3. WhatsApp'ta:
-   - **Android:** GIF'e dokun → **Çıkartma oluştur** → Bitti
+   - **Android:** GIF'e dokun → **⋮** → **Çıkartma oluştur**
    - **iPhone:** GIF'e basılı tut → **Kopyala** → mesaj kutusuna yapıştır → Gönder
 
 WhatsApp'ın kendi "GIF'ten çıkartma oluşturma" özelliği kullanıldığı için ek uygulama gerekmez.
-(Web siteleri WhatsApp'a doğrudan çıkartma ekleyemez; WebP paylaşınca fotoğraf olarak gider. GIF olarak gönderince WhatsApp onu GIF olarak tanır ve çıkartmaya çevirmeye izin verir.)
+Neden doğrudan çıkartma olarak gönderilmiyor? Web siteleri bunu yapamaz: tarayıcının paylaş özelliği yalnızca
+standart dosya türlerini (`image/webp`, `image/gif` …) iletir ve WhatsApp bunları sıradan resim/GIF olarak alır;
+çıkartma gönderme (`image/webp.wasticker`, `SEND_STICKER`) yalnızca telefona kurulu uygulamalara açıktır.
+GIF olarak gönderince WhatsApp onu tanır ve kendi menüsünden çıkartmaya çevirmeye izin verir.
 
 ## Özellikler
 

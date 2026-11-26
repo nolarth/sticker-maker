@@ -153,7 +153,7 @@ const VERSION = '__V__';
   const STEPS = {
     android: [
       `<b>WhatsApp'a gönder</b>'e bas, bir sohbet seç <span class="sub">Kendine de gönderebilirsin (en üstteki "Siz" sohbeti).</span>`,
-      `Sohbette GIF'e <b>dokun</b> → <b>Çıkartma oluştur</b> → <b>Bitti</b> ✓ <span class="sub">Çıkartma gönderilir ve çıkartma panelinde kalır.</span>`,
+      `Sohbette GIF'e <b>dokun</b> → sağ üstte <b>⋮</b> → <b>Çıkartma oluştur</b> ✓ <span class="sub">Çıkartma gönderilir ve çıkartma panelinde kalır; bir daha yapman gerekmez.</span>`,
     ],
     ios: [
       `<b>WhatsApp'a gönder</b>'e bas, bir sohbet seç <span class="sub">Kendine de gönderebilirsin.</span>`,
@@ -161,7 +161,7 @@ const VERSION = '__V__';
     ],
     desktop: [
       `<b>GIF'i indir</b> ve <a href="https://web.whatsapp.com" target="_blank" rel="noopener">WhatsApp Web</a>'de kendine gönder <span class="sub">Ya da bu siteyi telefonunda aç — tek dokunuşla gönderilir.</span>`,
-      `Telefonda GIF'e <b>dokun</b> → <b>Çıkartma oluştur</b> → <b>Bitti</b> ✓ <span class="sub">iPhone'da: GIF'e basılı tut → Kopyala → mesaj kutusuna yapıştır → Gönder.</span>`,
+      `Telefonda GIF'e <b>dokun</b> → <b>⋮</b> → <b>Çıkartma oluştur</b> ✓ <span class="sub">iPhone'da: GIF'e basılı tut → Kopyala → mesaj kutusuna yapıştır → Gönder.</span>`,
     ],
   };
 
