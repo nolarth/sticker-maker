@@ -34,6 +34,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Sürüm etiketi (önbellek kırma)
+        run: |
+          V="${GITHUB_SHA::7}"
+          grep -rl "__V__" public --include='*.html' --include='*.js' | xargs sed -i "s/__V__/$V/g"
+          grep -rn "?v=" public --include='*.html' --include='*.js' | head
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public

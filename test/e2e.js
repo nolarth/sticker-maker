@@ -50,7 +50,7 @@ try {
     ['14 sn GIF (10 sn kırpma)', gen('long.gif', ['-f', 'lavfi', '-i', 'testsrc=size=200x150:rate=10:duration=14']), { anim: true, max: 500, maxDur: 10 }],
     ['PNG (sabit)', gen('s.png', ['-f', 'lavfi', '-i', 'color=blue:size=200x300', '-frames:v', '1']), { anim: false, max: 100 }],
   ];
-  cases.push(['X linki (MP4 GIF)', { url: 'https://x.com/kedi/status/1234567890' }, { anim: true, max: 500, name: 'x_1234567890.webp' }]);
+  cases.push(['X linki (MP4 GIF)', { url: 'Şuna bak https://x.com/poorpela/status/2124676619461931160/photo/1' }, { anim: true, max: 500, name: 'x_2124676619461931160.webp' }]);
   for (const [label, file, exp] of cases) {
     const t0 = Date.now();
     if (typeof file === 'string') {

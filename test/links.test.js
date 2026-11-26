@@ -55,6 +55,8 @@ test('X linkleri tanınır', () => {
   assert.deepEqual(parseXUrl('https://x.com/a/status/42/video/2'), { id: '42', index: 2 });
   assert.deepEqual(parseXUrl('https://fxtwitter.com/a/status/42/photo/1'), { id: '42', index: 1 });
   assert.deepEqual(parseXUrl('https://vxtwitter.com/a/status/42'), { id: '42', index: null });
+  assert.deepEqual(parseXUrl('https://x.com/poorpela/status/2124676619461931160/photo/1'), { id: '2124676619461931160', index: 1 });
+  assert.deepEqual(parseXUrl(' https://www.x.com/a/status/42 \n'), { id: '42', index: null });
   assert.equal(parseXUrl('https://x.com/kedi'), null);
   assert.equal(parseXUrl('https://example.com/a/status/42'), null);
 });
@@ -90,6 +92,7 @@ test('X: anlaşılır hata mesajları', async () => {
   await assert.rejects(resolveXMedia({ id: '1' }, router([[/fxtwitter/, () => json({ code: 404 }, 404)], [/vxtwitter/, () => json({}, 404)]])), /bulunamadı/);
   await assert.rejects(resolveXMedia({ id: '1' }, router([[/fxtwitter/, () => json({ code: 401 }, 401)], [/vxtwitter/, () => json({}, 500)]])), /gizli/);
   await assert.rejects(resolveXMedia({ id: '1' }, router([])), /okunamadı/);
+  await assert.rejects(fetchMedia('https://t.co/abc123', router([])), /kısa link/);
   const blocked = router([[/fxtwitter/, () => json(fx([{ type: 'gif', url: 'https://video.twimg.com/a.mp4' }]))]]);
   await assert.rejects(fetchMedia('https://x.com/a/status/1', blocked), /X medyası indirilemedi/);
 });

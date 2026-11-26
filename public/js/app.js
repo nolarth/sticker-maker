@@ -1,5 +1,8 @@
-import { convertToSticker, loadFFmpeg } from './converter.js';
-import { fetchMedia, looksLikeMedia } from './links.js';
+// Sürüm etiketi yayın sırasında commit kimliğiyle değiştirilir (önbellek kırma) — bkz. .github/workflows/pages.yml
+import { convertToSticker, loadFFmpeg } from './converter.js?v=__V__';
+import { fetchMedia, looksLikeMedia } from './links.js?v=__V__';
+
+const VERSION = '__V__';
 
 {
 
@@ -19,6 +22,9 @@ import { fetchMedia, looksLikeMedia } from './links.js';
   const downloadBtn = $('#downloadBtn');
   const shareBtn = $('#shareBtn');
   const addPackBtn = $('#addPackBtn');
+
+  const verEl = document.getElementById('ver');
+  if (verEl) verEl.textContent = `sürüm ${VERSION.slice(0, 7)}`;
 
   let mode = 'upload';
   let selectedFile = null;
@@ -113,8 +119,10 @@ import { fetchMedia, looksLikeMedia } from './links.js';
         if (!looksLikeMedia(selectedFile.type, bytes)) throw new Error('Bu dosya bir GIF/görsel/video değil.');
         name = (selectedFile.name || 'sticker').replace(/\.[^.]+$/, '') || 'sticker';
       } else {
-        const u = urlInput.value.trim();
-        if (!/^https?:\/\/\S+$/i.test(u)) throw new Error('Geçerli bir link gir (https:// ile başlamalı).');
+        // Paylaşım metni yapıştırıldıysa içindeki ilk linki al
+        const found = urlInput.value.match(/https?:\/\/[^\s<>"']+/i);
+        if (!found) throw new Error('Geçerli bir link gir (https:// ile başlamalı).');
+        const u = found[0];
         setStatus('GIF indiriliyor…');
         ({ bytes, name } = await fetchMedia(u));
       }

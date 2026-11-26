@@ -48,7 +48,7 @@ export function validateUrl(raw) {
 
 // ---------- X (Twitter) ----------
 
-const X_HOSTS = /^(?:www\.|mobile\.|m\.)?(?:x\.com|twitter\.com|fxtwitter\.com|fixupx\.com|vxtwitter\.com|fixvx\.com|twittpr\.com|nitter\.net)$/i;
+const X_HOSTS = /^(?:[a-z0-9-]+\.)?(?:x\.com|twitter\.com|fxtwitter\.com|fixupx\.com|vxtwitter\.com|fixvx\.com|twittpr\.com|nitter\.net)$/i;
 
 /**
  * X/Twitter tweet linkini çözümler.
@@ -145,6 +145,10 @@ async function download(url, fetchImpl, { blockedMsg } = {}) {
 export async function fetchMedia(raw, fetchImpl = fetch) {
   validateUrl(raw);
 
+  const host = new URL(String(raw).trim()).hostname.toLowerCase();
+  if (host === 't.co' || /^pic\.(x|twitter)\.com$/.test(host)) {
+    throw new Error('Bu bir X kısa linki. Gönderiyi açıp "Paylaş → Bağlantıyı kopyala" ile x.com/…/status/… linkini yapıştır.');
+  }
   const x = parseXUrl(raw);
   if (x) {
     const media = await resolveXMedia(x, fetchImpl);
