@@ -1,5 +1,6 @@
 // Tarayıcı içinde (ffmpeg.wasm) GIF -> WhatsApp çıkartması (512x512 WebP) dönüştürücü.
 import { FFmpeg } from '../vendor/ffmpeg/index.js';
+import { t } from './i18n.js?v=__V__';
 
 export const CORE_BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
 
@@ -56,7 +57,7 @@ async function exec(args, timeoutMs = 120_000) {
   if (code !== 0) await waitForLog(/Aborted|Error|error/i, 300);
   if (code !== 0) {
     const tail = logs.slice(-6).join('\n');
-    throw new Error(code === 1 && /timeout|Timeout/.test(tail) ? 'Dönüştürme zaman aşımına uğradı.' : `ffmpeg hata kodu ${code}\n${tail}`);
+    throw new Error(code === 1 && /timeout|Timeout/.test(tail) ? t('errTimeout') : `ffmpeg hata kodu ${code}\n${tail}`);
   }
   return logs.slice();
 }
@@ -68,7 +69,7 @@ async function probe(input) {
   await exec(['-hide_banner', '-loglevel', 'info', '-stats', '-i', input, '-map', '0:v:0', '-f', 'null', '-'], 60_000);
   await waitForLog(/muxing overhead|Aborted\(\)/);
   const text = logs.join('\n');
-  if (!/Stream #\d+:\d+.*Video:/.test(text)) throw new Error('Dosyada görüntü bulunamadı.');
+  if (!/Stream #\d+:\d+.*Video:/.test(text)) throw new Error(t('errNoVideo'));
 
   let duration = 0;
   const d = text.match(/Duration: (\d+):(\d+):(\d+(?:\.\d+)?)/);
@@ -125,12 +126,12 @@ async function encode(input, { animated, fps, q, fit, start, duration }) {
 async function prepare(bytes, opts) {
   const status = opts.onStatus || (() => {});
   if (!ffmpeg) {
-    status('Dönüştürücü yükleniyor (ilk seferde ~30 MB)…');
+    status(t('stLoading'));
     await loadFFmpeg();
   }
   // writeFile baytları worker'a taşır (orijinal dizi boşalır); kaynak tekrar kullanılabilsin diye kopya gönder
   await ffmpeg.writeFile('input', bytes.slice());
-  status('GIF inceleniyor…');
+  status(t('stInspecting'));
   const info = await probe('input');
   const animated = info.frames > 1;
   let start = Math.max(0, Number(opts.start) || 0);
@@ -160,7 +161,7 @@ export async function convertToGif(bytes, opts = {}) {
     let last = null;
     for (let i = 0; i < GIF_ATTEMPTS.length; i++) {
       const { side, fps, colors } = GIF_ATTEMPTS[i];
-      status(i === 0 ? 'GIF hazırlanıyor…' : `GIF küçültülüyor (deneme ${i + 1})…`);
+      status(i === 0 ? t('stGif') : t('stGifShrink', i + 1));
       const size = fit === 'crop'
         ? `scale=${side}:${side}:force_original_aspect_ratio=increase:flags=lanczos,crop=${side}:${side}`
         : fit === 'stretch'
@@ -197,7 +198,7 @@ export async function convertToSticker(bytes, opts = {}) {
     let smallest = Infinity;
     for (let i = 0; i < ATTEMPTS.length; i++) {
       const a = ATTEMPTS[i];
-      status(animated ? `Dönüştürülüyor… (deneme ${i + 1}: ${a.fps} fps, kalite ${a.q})` : 'Dönüştürülüyor…');
+      status(animated ? t('stConvertingTry', i + 1, a.fps, a.q) : t('stConverting'));
       const data = await encode(input, { animated, fps: a.fps, q: a.q, fit, start, duration });
       smallest = Math.min(smallest, data.length);
       if (data.length <= limit) {
@@ -209,13 +210,13 @@ export async function convertToSticker(bytes, opts = {}) {
     }
     if (animated) {
       for (const d of [duration * 0.6, duration * 0.35]) {
-        status(`Sığdırmak için süre kısaltılıyor (${d.toFixed(1)} sn)…`);
+        status(t('stShorten', d.toFixed(1)));
         const data = await encode(input, { animated, fps: 6, q: 10, fit, start, duration: d });
         smallest = Math.min(smallest, data.length);
         if (data.length <= limit) return { data, animated, bytes: data.length, fps: 6, quality: 10, duration: d };
       }
     }
-    throw new Error(`Çıkartma WhatsApp sınırına (${limit / 1024} KB) sığdırılamadı (en küçük: ${Math.round(smallest / 1024)} KB). Daha kısa bir GIF dene.`);
+    throw new Error(t('errTooLarge', limit / 1024, Math.round(smallest / 1024)));
   } finally {
     await ffmpeg.deleteFile(input).catch(() => {});
   }

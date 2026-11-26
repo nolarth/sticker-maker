@@ -1,3 +1,5 @@
+import { t } from './i18n.js?v=__V__';
+
 // Linkten GIF indirme (tarayıcıda). Yalnızca CORS'a izin veren adresler indirilebilir
 // (Giphy, Tenor medya sunucuları, Discord/Imgur gibi CDN'lerin çoğu izin verir).
 // X (Twitter) linkleri, herkese açık FxTwitter / VxTwitter API'leri üzerinden çözülür.
@@ -40,9 +42,9 @@ export function validateUrl(raw) {
   try {
     u = new URL(String(raw).trim());
   } catch {
-    throw new Error('Geçersiz link.');
+    throw new Error(t('errBadUrl'));
   }
-  if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('Yalnızca http/https linkleri desteklenir.');
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error(t('errProtocol'));
   return u;
 }
 
@@ -94,7 +96,7 @@ async function fromVxTwitter(id, fetchImpl) {
   if (res.status === 404) return { notFound: true };
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json().catch(() => null);
-  if (!json) throw new Error('geçersiz yanıt');
+  if (!json) throw new Error('invalid response');
   const ext = json.media_extended || (json.mediaURLs || []).map((url) => ({ type: /\.mp4/i.test(url) ? 'video' : 'image', url }));
   return { list: ext.filter((m) => m && m.url).map((m) => ({ type: m.type === 'image' ? 'photo' : m.type, url: m.url })) };
 }
@@ -112,16 +114,16 @@ export async function resolveXMedia({ id, index }, fetchImpl = fetch) {
       if (r.private) { sawPrivate = true; continue; }
       const picked = pickMedia(r.list, index);
       if (picked) return picked;
-      throw Object.assign(new Error('Bu gönderide GIF, video veya fotoğraf yok.'), { final: true });
+      throw Object.assign(new Error(t('errNoMediaInTweet')), { final: true });
     } catch (e) {
       if (e.final) throw e;
       details.push(`${label}: ${e && e.message ? e.message : e}`);
       /* sonraki kaynağı dene */
     }
   }
-  if (sawPrivate) throw new Error('Bu gönderi gizli veya yaş kısıtlamalı; medyasına erişilemiyor.');
-  if (sawNotFound) throw new Error('Gönderi bulunamadı (silinmiş olabilir).');
-  throw new Error(`X gönderisi okunamadı (adım 1/2: gönderi bilgisi). Biraz sonra tekrar dene ya da GIF'i indirip dosya olarak yükle.\n[Ayrıntı — ${details.join(' · ')}]`);
+  if (sawPrivate) throw new Error(t('errPrivate'));
+  if (sawNotFound) throw new Error(t('errNotFound'));
+  throw new Error(`${t('errXRead')}\n[${t('detail')} — ${details.join(' · ')}]`);
 }
 
 // ---------- İndirme ----------
@@ -131,13 +133,13 @@ async function download(url, fetchImpl, { blockedMsg } = {}) {
   try {
     res = await fetchImpl(url, { mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' });
   } catch (e) {
-    throw new Error(blockedMsg ? `${blockedMsg}\n[Ayrıntı — ${url} · ${e && e.message}]` : 'Bu site doğrudan indirmeye izin vermiyor. GIF\'i bilgisayarına indirip "Dosya yükle" sekmesinden yükle.');
+    throw new Error(blockedMsg ? `${blockedMsg}\n[${t('detail')} — ${url} · ${e && e.message}]` : t('errBlocked'));
   }
-  if (!res.ok) throw new Error(`Link açılamadı (HTTP ${res.status}).`);
+  if (!res.ok) throw new Error(t('errHttp', res.status));
   const len = Number(res.headers.get('content-length') || 0);
-  if (len > MAX_BYTES) throw new Error('Dosya çok büyük (en fazla 25 MB).');
+  if (len > MAX_BYTES) throw new Error(t('errTooBig'));
   const bytes = new Uint8Array(await res.arrayBuffer());
-  if (bytes.length > MAX_BYTES) throw new Error('Dosya çok büyük (en fazla 25 MB).');
+  if (bytes.length > MAX_BYTES) throw new Error(t('errTooBig'));
   return { res, bytes, type: res.headers.get('content-type') || '' };
 }
 
@@ -147,27 +149,27 @@ export async function fetchMedia(raw, fetchImpl = fetch) {
 
   const host = new URL(String(raw).trim()).hostname.toLowerCase();
   if (host === 't.co' || /^pic\.(x|twitter)\.com$/.test(host)) {
-    throw new Error('Bu bir X kısa linki. Gönderiyi açıp "Paylaş → Bağlantıyı kopyala" ile x.com/…/status/… linkini yapıştır.');
+    throw new Error(t('errShortLink'));
   }
   const x = parseXUrl(raw);
   if (x) {
     const media = await resolveXMedia(x, fetchImpl);
     const { bytes, type } = await download(media.url, fetchImpl, {
-      blockedMsg: 'X medyası indirilemedi (adım 2/2: video dosyası). GIF\'i X\'ten indirip "Dosya yükle" sekmesinden yükle.',
+      blockedMsg: t('errXMedia'),
     });
-    if (!looksLikeMedia(type, bytes)) throw new Error('X\'ten gelen dosya bir GIF/video değil.');
+    if (!looksLikeMedia(type, bytes)) throw new Error(t('errXNotMedia'));
     return { bytes, name: `x_${x.id}` };
   }
 
   const url = rewriteKnownHosts(raw);
   if (/^https?:\/\/(www\.)?tenor\.com\/view\//i.test(url)) {
-    throw new Error('Tenor sayfa linkleri doğrudan açılamıyor. GIF\'e sağ tıklayıp "Resim adresini kopyala" ile media.tenor.com linkini yapıştır.');
+    throw new Error(t('errTenor'));
   }
   const { res, bytes, type } = await download(url, fetchImpl);
   if (!looksLikeMedia(type, bytes)) {
     throw new Error(type.includes('html')
-      ? 'Bu bir sayfa linki, GIF değil. GIF\'e sağ tıklayıp "Resim adresini kopyala" ile doğrudan linki yapıştır.'
-      : 'Link bir GIF/görsel değil.');
+      ? t('errPageLink')
+      : t('errNotGif'));
   }
   let name = 'sticker';
   try {

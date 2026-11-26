@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/serve.mjs",
-    "test": "node --test test/links.test.js",
+    "test": "node --test test/links.test.js test/i18n.test.js",
     "test:e2e": "node test/e2e.js"
   },
   "license": "MIT",

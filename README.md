@@ -1,4 +1,4 @@
-# StikerYap — GIF → WhatsApp Çıkartma
+# Sticker Maker — GIF → WhatsApp Çıkartma
 
 GIF'leri **link girerek** ya da **dosya yükleyerek** WhatsApp çıkartmasına dönüştüren web sitesi.
 Dönüştürme tamamen **tarayıcıda** ([ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm)) yapılır; sunucu gerekmez, site **GitHub Pages**'te çalışır ve dosyalar hiçbir yere yüklenmez.
@@ -24,7 +24,8 @@ GIF olarak gönderince WhatsApp onu tanır ve kendi menüsünden çıkartmaya ç
 - **Ayarlar:** Sığdır (oranı koru) / Kare kırp / Uzat, başlangıç saniyesi; en fazla 10 sn
 - GIF en fazla 8 MB olacak şekilde otomatik küçültülür
 - **Diğer seçenekler:** 512×512, şeffaf, ≤ 500 KB animasyonlu **WebP** çıkartma dosyası (çıkartma uygulamaları için)
-- Açık/koyu tema, mobil uyumlu, Türkçe arayüz
+- **Türkçe / English:** sistem dili Türkçe ise Türkçe, değilse İngilizce açılır; sağ üstteki **EN/TR** butonuyla değiştirilir ve seçim hatırlanır
+- Açık/koyu tema, mobil uyumlu
 
 ## GitHub Pages'te yayınlama
 
@@ -38,7 +39,7 @@ GIF olarak gönderince WhatsApp onu tanır ve kendi menüsünden çıkartmaya ç
 
 ```bash
 npm start          # http://localhost:8080 (bağımlılıksız statik sunucu)
-npm test           # birim testleri
+npm test           # birim testleri (link çözümleme, dil seçimi, çeviri tamlığı)
 npm install && npm run test:e2e   # uçtan uca: gerçek GIF'leri tarayıcıda dönüştürür (playwright + ffmpeg gerekir)
 ```
 
@@ -57,5 +58,6 @@ npm install && npm run test:e2e   # uçtan uca: gerçek GIF'leri tarayıcıda d�
 | `public/index.html`, `style.css` | Arayüz |
 | `public/js/app.js` | Arayüz mantığı, WhatsApp'a gönderme (Web Share), cihaza göre adımlar |
 | `public/js/converter.js` | ffmpeg.wasm ile GIF ve WebP üretimi, boyut sınırına sığdırma |
+| `public/js/i18n.js` | Türkçe/İngilizce metinler, dil seçimi |
 | `public/js/links.js` | Linkten indirme, Giphy ve X (Twitter) link çözümleme |
 | `public/vendor/ffmpeg/` | `@ffmpeg/ffmpeg` ESM dosyaları (Worker aynı alan adından yüklenmeli) |

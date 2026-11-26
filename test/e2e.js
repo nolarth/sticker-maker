@@ -57,7 +57,7 @@ try {
   await new Promise((r) => setTimeout(r, 500));
 
   // ---- Masaüstü: GIF indir + WebP ----
-  const desk = await browser.newContext({ acceptDownloads: true });
+  const desk = await browser.newContext({ acceptDownloads: true, locale: 'tr-TR' });
   await setup(desk);
   const page = await desk.newPage();
   const errors = [];
@@ -98,7 +98,7 @@ try {
   assert.deepEqual(errors, []);
 
   // ---- Android telefon: "WhatsApp'a gönder" paylaşım ekranına GIF dosyası verir ----
-  const phone = await browser.newContext({ ...devices['Pixel 7'] });
+  const phone = await browser.newContext({ ...devices['Pixel 7'], locale: 'tr-TR' });
   await setup(phone);
   await phone.addInitScript(() => {
     window.__shared = null;
@@ -117,6 +117,57 @@ try {
   const steps = await mp.$eval('#steps', (e) => e.textContent);
   assert.match(steps, /Çıkartma oluştur/);
   console.log(`✓ Android: paylaşım ekranına ${shared[0].name} (${shared[0].type}) verildi; adımlar: "${steps.slice(0, 60)}…"`);
+
+  // ---- Dil: sistem diline göre ilk açılış, buton, hatırlama ----
+  for (const [locale, expected] of [['tr-TR', 'tr'], ['en-US', 'en'], ['de-DE', 'en']]) {
+    const ctx = await browser.newContext({ locale });
+    await setup(ctx);
+    const lp = await ctx.newPage();
+    const errs = [];
+    lp.on('pageerror', (e) => errs.push(e.message));
+    await lp.goto(`http://localhost:${PORT}/`);
+    await lp.waitForFunction(() => !document.documentElement.classList.contains('i18n-pending'));
+    const info = () => lp.evaluate(() => ({
+      lang: document.documentElement.lang,
+      title: document.title,
+      brand: document.querySelector('.brand').textContent.trim(),
+      h1: document.querySelector('h1').textContent,
+      btn: document.querySelector('#convertBtn').textContent.trim(),
+      toggle: document.querySelector('#langToggle').textContent,
+    }));
+    let i = await info();
+    assert.equal(i.lang, expected, `${locale}: ilk dil`);
+    assert.equal(i.brand.replace(/\s+/g, ' '), 'Sticker Maker');
+    assert.match(i.title, /^Sticker Maker/);
+    assert.match(i.h1, expected === 'tr' ? /WhatsApp çıkartmasına/ : /WhatsApp sticker/);
+    assert.equal(i.toggle, expected === 'tr' ? 'EN' : 'TR');
+
+    // Dönüştür, sonra dili değiştir: sonuç ekranı da çevrilmeli
+    await convert(lp, cases[0][1]);
+    const steps1 = await lp.$eval('#steps', (e) => e.textContent);
+    assert.match(steps1, expected === 'tr' ? /Çıkartma oluştur/ : /Create sticker/);
+    await lp.click('#langToggle');
+    const other = expected === 'tr' ? 'en' : 'tr';
+    i = await info();
+    assert.equal(i.lang, other, `${locale}: butonla değişim`);
+    assert.equal(i.brand.replace(/\s+/g, ' '), 'Sticker Maker');
+    const steps2 = await lp.$eval('#steps', (e) => e.textContent);
+    assert.match(steps2, other === 'tr' ? /Çıkartma oluştur/ : /Create sticker/);
+    // Yenileyince seçim hatırlanmalı
+    await lp.reload();
+    await lp.waitForFunction(() => !document.documentElement.classList.contains('i18n-pending'));
+    assert.equal((await info()).lang, other, `${locale}: seçim hatırlanmalı`);
+    // Hata mesajı seçili dilde
+    await lp.click('#tab-link');
+    await lp.fill('#url', 'https://t.co/abc');
+    await lp.click('#convertBtn');
+    await lp.waitForFunction(() => !document.querySelector('#error').hidden);
+    const err = await lp.$eval('#error', (e) => e.textContent);
+    assert.match(err, other === 'tr' ? /kısa linki/ : /short link/);
+    assert.deepEqual(errs, []);
+    console.log(`✓ Dil (${locale}): ilk açılış ${expected}, butonla ${other}, yenileyince ${other}; hata: "${err.slice(0, 40)}…"`);
+    await ctx.close();
+  }
 
   console.log('Tüm uçtan uca testler geçti.');
 } finally {

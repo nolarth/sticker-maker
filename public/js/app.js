@@ -1,6 +1,7 @@
 // Sürüm etiketi yayın sırasında commit kimliğiyle değiştirilir (önbellek kırma) — bkz. .github/workflows/pages.yml
 import { convertToGif, convertToSticker, loadFFmpeg } from './converter.js?v=__V__';
 import { fetchMedia, looksLikeMedia } from './links.js?v=__V__';
+import { t, getLang, setLang, detectLang, saveLang, LANGS } from './i18n.js?v=__V__';
 
 const VERSION = '__V__';
 
@@ -25,13 +26,45 @@ const VERSION = '__V__';
   const stepsEl = $('#steps');
 
   const verEl = document.getElementById('ver');
-  if (verEl) verEl.textContent = `sürüm ${VERSION.slice(0, 7)}`;
 
   let mode = 'upload';
   let selectedFile = null;
   let current = null; // { gif: File, url, name, source: Uint8Array, opts }
   const ua = navigator.userAgent;
   const platform = /android/i.test(ua) ? 'android' : /iphone|ipad|ipod/i.test(ua) ? 'ios' : 'desktop';
+
+  // ---------- Dil ----------
+  const langToggle = $('#langToggle');
+  function applyI18n() {
+    const lang = getLang();
+    document.documentElement.lang = lang;
+    document.title = t('title');
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.content = t('metaDesc');
+    document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t(el.dataset.i18n)));
+    document.querySelectorAll('[data-i18n-html]').forEach((el) => (el.innerHTML = t(el.dataset.i18nHtml)));
+    document.querySelectorAll('[data-i18n-attr]').forEach((el) => {
+      for (const pair of el.dataset.i18nAttr.split(';')) {
+        const [attr, key] = pair.split(':');
+        el.setAttribute(attr.trim(), t(key.trim()));
+      }
+    });
+    const other = LANGS.find((l) => l !== lang);
+    langToggle.textContent = other.toUpperCase();
+    langToggle.setAttribute('aria-label', t('langToggle'));
+    langToggle.title = t('langToggle');
+    if (verEl) verEl.textContent = t('version', VERSION.slice(0, 7));
+    if (!btn.disabled) setStatus(t('prepare'));
+    if (!webpBtn.disabled) webpBtn.textContent = t('webpDownload');
+    renderResultText();
+    document.documentElement.classList.remove('i18n-pending');
+  }
+  langToggle.addEventListener('click', () => {
+    setLang(LANGS.find((l) => l !== getLang()));
+    saveLang(getLang());
+    hideError();
+    applyI18n();
+  });
 
   // ---------- Tema ----------
   const themeToggle = $('#themeToggle');
@@ -64,9 +97,9 @@ const VERSION = '__V__';
   // ---------- Dosya seçimi / sürükle-bırak / yapıştır ----------
   function pickFile(f) {
     if (!f) return;
-    if (f.size > 25 * 1024 * 1024) return showError('Dosya çok büyük (en fazla 25 MB).');
+    if (f.size > 25 * 1024 * 1024) return showError(t('errTooBig'));
     selectedFile = f;
-    dropFile.textContent = `${f.name || 'yapıştırılan görsel'} · ${formatBytes(f.size)}`;
+    dropFile.textContent = `${f.name || t('pastedImage')} · ${formatBytes(f.size)}`;
     dropFile.hidden = false;
     setMode('upload');
   }
@@ -116,16 +149,16 @@ const VERSION = '__V__';
       let bytes;
       let name = 'sticker';
       if (mode === 'upload') {
-        if (!selectedFile) throw new Error('Önce bir GIF seç ya da sürükle.');
+        if (!selectedFile) throw new Error(t('errPickFirst'));
         bytes = new Uint8Array(await selectedFile.arrayBuffer());
-        if (!looksLikeMedia(selectedFile.type, bytes)) throw new Error('Bu dosya bir GIF/görsel/video değil.');
+        if (!looksLikeMedia(selectedFile.type, bytes)) throw new Error(t('errNotMedia'));
         name = (selectedFile.name || 'sticker').replace(/\.[^.]+$/, '') || 'sticker';
       } else {
         // Paylaşım metni yapıştırıldıysa içindeki ilk linki al
         const found = urlInput.value.match(/https?:\/\/[^\s<>"']+/i);
-        if (!found) throw new Error('Geçerli bir link gir (https:// ile başlamalı).');
+        if (!found) throw new Error(t('errEnterLink'));
         const u = found[0];
-        setStatus('GIF indiriliyor…');
+        setStatus(t('stDownloading'));
         ({ bytes, name } = await fetchMedia(u));
       }
       const opts = {
@@ -136,7 +169,7 @@ const VERSION = '__V__';
       showResult(r, { name, source: bytes, opts });
     } catch (err) {
       console.error(err);
-      showError(err.message || 'Bir şeyler ters gitti.');
+      showError(err.message || t('errGeneric'));
     } finally {
       setLoading(false);
     }
@@ -149,21 +182,8 @@ const VERSION = '__V__';
   urlInput.addEventListener('input', warmUp, { once: true });
   document.addEventListener('paste', warmUp, { once: true });
 
-  // WhatsApp'ın kendi özelliği: sohbetteki GIF'ten animasyonlu çıkartma oluşturma
-  const STEPS = {
-    android: [
-      `<b>WhatsApp'a gönder</b>'e bas, bir sohbet seç <span class="sub">Kendine de gönderebilirsin (en üstteki "Siz" sohbeti).</span>`,
-      `Sohbette GIF'e <b>dokun</b> → sağ üstte <b>⋮</b> → <b>Çıkartma oluştur</b> ✓ <span class="sub">Çıkartma gönderilir ve çıkartma panelinde kalır; bir daha yapman gerekmez.</span>`,
-    ],
-    ios: [
-      `<b>WhatsApp'a gönder</b>'e bas, bir sohbet seç <span class="sub">Kendine de gönderebilirsin.</span>`,
-      `Sohbette GIF'e <b>basılı tut</b> → <b>Kopyala</b> → mesaj kutusuna <b>yapıştır</b> → <b>Gönder</b> ✓ <span class="sub">Çıkartma olarak gider; çıkartmaya basılı tutup <b>Favorilere ekle</b>.</span>`,
-    ],
-    desktop: [
-      `<b>GIF'i indir</b> ve <a href="https://web.whatsapp.com" target="_blank" rel="noopener">WhatsApp Web</a>'de kendine gönder <span class="sub">Ya da bu siteyi telefonunda aç — tek dokunuşla gönderilir.</span>`,
-      `Telefonda GIF'e <b>dokun</b> → <b>⋮</b> → <b>Çıkartma oluştur</b> ✓ <span class="sub">iPhone'da: GIF'e basılı tut → Kopyala → mesaj kutusuna yapıştır → Gönder.</span>`,
-    ],
-  };
+  // WhatsApp'ın kendi özelliği: sohbetteki GIF'ten animasyonlu çıkartma oluşturma (adımlar i18n.js'te)
+  const STEP_KEYS = { android: 'stepsAndroid', ios: 'stepsIos', desktop: 'stepsDesktop' };
 
   function showResult(r, meta) {
     if (current) URL.revokeObjectURL(current.url);
@@ -177,20 +197,27 @@ const VERSION = '__V__';
     chatImg.src = url;
     gifDownloadBtn.href = url;
     gifDownloadBtn.download = fileName;
-    stats.innerHTML = [
-      r.animated ? `<li class="ok">✓ Animasyonlu · <b>${r.duration.toFixed(1)} sn</b></li>` : '<li>Sabit görsel</li>',
-      `<li><b>${formatBytes(r.bytes)}</b></li>`,
-    ].join('');
-
-    const canSend = platform !== 'desktop' && !!(navigator.canShare && navigator.canShare({ files: [gif] }));
-    sendBtn.hidden = !canSend;
-    gifDownloadBtn.hidden = canSend;
-    stepsEl.innerHTML = STEPS[canSend ? platform : 'desktop'].map((t) => `<li><span>${t}</span></li>`).join('');
+    current.result = r;
+    current.canSend = platform !== 'desktop' && !!(navigator.canShare && navigator.canShare({ files: [gif] }));
+    sendBtn.hidden = !current.canSend;
+    gifDownloadBtn.hidden = current.canSend;
+    renderResultText();
 
     webpBtn.disabled = false;
-    webpBtn.textContent = '⬇ WebP çıkartma dosyası indir';
+    webpBtn.textContent = t('webpDownload');
     result.hidden = false;
     result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderResultText() {
+    if (!current || !current.result) return;
+    const r = current.result;
+    stats.innerHTML = [
+      r.animated ? `<li class="ok">${t('statAnimated', r.duration.toFixed(1))}</li>` : `<li>${t('statStatic')}</li>`,
+      `<li><b>${formatBytes(r.bytes)}</b></li>`,
+    ].join('');
+    const steps = t(STEP_KEYS[current.canSend ? platform : 'desktop']);
+    stepsEl.innerHTML = steps.map((x) => `<li><span>${x}</span></li>`).join('');
   }
 
   sendBtn.addEventListener('click', async () => {
@@ -201,7 +228,7 @@ const VERSION = '__V__';
       if (err && err.name === 'AbortError') return; // kullanıcı vazgeçti
       // Paylaşım açılamazsa indirmeye düş
       gifDownloadBtn.hidden = false;
-      showError('Paylaşım ekranı açılamadı. GIF\'i indirip WhatsApp\'tan gönderebilirsin.');
+      showError(t('errShareFailed'));
     }
   });
 
@@ -220,10 +247,10 @@ const VERSION = '__V__';
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
-      webpBtn.textContent = '✓ WebP indirildi';
+      webpBtn.textContent = t('webpDone');
     } catch (err) {
-      showError(err.message || 'WebP oluşturulamadı.');
-      webpBtn.textContent = '⬇ WebP çıkartma dosyası indir';
+      showError(err.message || t('errWebp'));
+      webpBtn.textContent = t('webpDownload');
       webpBtn.disabled = false;
     }
   });
@@ -232,11 +259,14 @@ const VERSION = '__V__';
   function setLoading(on) {
     btn.disabled = on;
     btn.classList.toggle('loading', on);
-    setStatus(on ? 'Hazırlanıyor…' : 'Hazırla');
+    setStatus(on ? t('preparing') : t('prepare'));
   }
   function setStatus(text) { btn.querySelector('.btn-label').textContent = text; }
   function showError(msg) { errorBox.textContent = msg; errorBox.hidden = false; }
   function hideError() { errorBox.hidden = true; }
   function formatBytes(n) { return n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`; }
   function safeName(s) { return (s || 'sticker').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 60) || 'sticker'; }
+
+  setLang(detectLang());
+  applyI18n();
 }
