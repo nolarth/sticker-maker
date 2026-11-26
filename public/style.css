@@ -172,3 +172,15 @@ html.i18n-pending body { visibility: hidden; }
 .more { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; }
 .more summary { cursor: pointer; color: var(--muted); font-weight: 600; }
 .more .btn { margin-top: 8px; }
+
+.faq { margin-top: 32px; }
+.faq h2 { font-size: 22px; letter-spacing: -.01em; margin: 0 0 12px; }
+.faq details { border: 1px solid var(--border); background: var(--surface); border-radius: 14px; padding: 4px 16px; margin-bottom: 10px; }
+.faq summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; font-size: 20px; color: var(--muted); flex: none; }
+.faq details[open] summary::after { content: '–'; }
+.faq h3 { font-size: 16px; margin: 0; font-weight: 600; }
+.faq p { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+.faq p b { color: var(--text); }
+.steps a { color: var(--accent); font-weight: 600; }

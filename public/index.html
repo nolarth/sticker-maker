@@ -3,25 +3,97 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sticker Maker</title>
-  <meta name="description" content="Turn X, Giphy or your own GIFs into WhatsApp stickers in seconds. No app to install." />
+  <title>Sticker Maker — GIF to WhatsApp Sticker Converter (X, Giphy) · Free</title>
+  <meta name="description" content="Turn X (Twitter), Giphy or your own GIFs into animated WhatsApp stickers in seconds. Free, no app or sign-up — your files stay in your browser." />
+  <meta name="keywords" content="WhatsApp sticker, GIF to sticker, animated sticker, X GIF, Twitter GIF, Giphy, WebP, WhatsApp çıkartma, GIF çıkartma, çıkartma yapma" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="author" content="nolarth" />
+  <meta name="application-name" content="Sticker Maker" />
+  <meta name="apple-mobile-web-app-title" content="Sticker Maker" />
+  <meta name="theme-color" content="#00a884" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0b141a" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="light dark" />
+
+  <link rel="canonical" href="https://nolarth.github.io/sticker-maker/" />
+  <link rel="alternate" hreflang="en" href="https://nolarth.github.io/sticker-maker/?lang=en" />
+  <link rel="alternate" hreflang="tr" href="https://nolarth.github.io/sticker-maker/?lang=tr" />
+  <link rel="alternate" hreflang="x-default" href="https://nolarth.github.io/sticker-maker/" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Sticker Maker" />
+  <meta property="og:url" content="https://nolarth.github.io/sticker-maker/" />
+  <meta property="og:title" content="Sticker Maker — Turn any GIF into a WhatsApp sticker" />
+  <meta property="og:description" content="Paste an X or Giphy link, send it to WhatsApp, tap Create sticker. Free, no app, works in your browser." />
+  <meta property="og:image" content="https://nolarth.github.io/sticker-maker/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Sticker Maker — GIF to WhatsApp sticker" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="tr_TR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sticker Maker — Turn any GIF into a WhatsApp sticker" />
+  <meta name="twitter:description" content="Paste an X or Giphy link, send it to WhatsApp, tap Create sticker. Free, no app, works in your browser." />
+  <meta name="twitter:image" content="https://nolarth.github.io/sticker-maker/og-image.png" />
+  <meta name="twitter:image:alt" content="Sticker Maker — GIF to WhatsApp sticker" />
+
+  <!-- Simgeler -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+
+  <!-- Dönüştürücü CDN'den yüklenir: bağlantıyı önceden aç -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Sticker Maker",
+    "alternateName": "GIF to WhatsApp Sticker Converter",
+    "url": "https://nolarth.github.io/sticker-maker/",
+    "description": "Turn X (Twitter), Giphy or your own GIFs into animated WhatsApp stickers in seconds. Free, no app or sign-up; files are converted in the browser.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript and WebAssembly",
+    "inLanguage": ["en", "tr"],
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "image": "https://nolarth.github.io/sticker-maker/og-image.png",
+    "screenshot": "https://nolarth.github.io/sticker-maker/og-image.png",
+    "featureList": [
+      "Convert X (Twitter) GIF links",
+      "Convert Giphy and direct GIF links",
+      "Upload GIF, MP4, WebM, PNG or JPG",
+      "One-tap send to WhatsApp",
+      "512x512 animated WebP sticker download",
+      "Runs entirely in the browser"
+    ],
+    "author": { "@type": "Person", "name": "nolarth", "url": "https://github.com/nolarth" },
+    "codeRepository": "https://github.com/nolarth/sticker-maker"
+  }
+  </script>
   <script>
     // Dili sayfa çizilmeden belirle (yanlış dilin bir an görünmemesi için). Asıl çeviri js/i18n.js'te.
+    // Öncelik: adresteki ?lang= > kayıtlı tercih > sistem dili Türkçe ise tr > en
     (function () {
       var l = null;
-      try { l = localStorage.getItem('lang'); } catch (e) {}
+      try { l = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+      if (l !== 'tr' && l !== 'en') { try { l = localStorage.getItem('lang'); } catch (e) {} }
       if (l !== 'tr' && l !== 'en') {
         var p = String((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
         l = p === 'tr' || p.indexOf('tr-') === 0 ? 'tr' : 'en';
       }
       var h = document.documentElement;
       h.lang = l;
-      h.classList.add('i18n-pending');
-      setTimeout(function () { h.classList.remove('i18n-pending'); }, 2500);
+      if (l !== 'en') {
+        // HTML İngilizce önceden doldurulmuş; başka dil seçildiyse çeviri uygulanana kadar gizle
+        h.classList.add('i18n-pending');
+        setTimeout(function () { h.classList.remove('i18n-pending'); }, 2500);
+      }
     })();
   </script>
-  <meta name="theme-color" content="#0b141a" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎞️</text></svg>" />
   <link rel="stylesheet" href="style.css?v=__V__" />
 </head>
 <body>
@@ -125,10 +197,38 @@
     </section>
 
 
-    <section class="specs">
+    <section class="specs" aria-label="How it works">
       <div><b>1</b><span data-i18n="spec1"></span></div>
       <div><b>2</b><span data-i18n="spec2"></span></div>
       <div><b>3</b><span data-i18n="spec3"></span></div>
+    </section>
+
+    <section class="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title" data-i18n="faqTitle"></h2>
+      <details open>
+        <summary><h3 data-i18n="faq1q"></h3></summary>
+        <p data-i18n-html="faq1a"></p>
+      </details>
+      <details>
+        <summary><h3 data-i18n="faq2q"></h3></summary>
+        <p data-i18n-html="faq2a"></p>
+      </details>
+      <details>
+        <summary><h3 data-i18n="faq3q"></h3></summary>
+        <p data-i18n-html="faq3a"></p>
+      </details>
+      <details>
+        <summary><h3 data-i18n="faq4q"></h3></summary>
+        <p data-i18n-html="faq4a"></p>
+      </details>
+      <details>
+        <summary><h3 data-i18n="faq5q"></h3></summary>
+        <p data-i18n-html="faq5a"></p>
+      </details>
+      <details>
+        <summary><h3 data-i18n="faq6q"></h3></summary>
+        <p data-i18n-html="faq6a"></p>
+      </details>
     </section>
   </main>
 

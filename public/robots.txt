@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nolarth.github.io/sticker-maker/sitemap.xml

@@ -2,7 +2,7 @@
 // CDN ve X istekleri yerel dosyalara yönlendirilir. Gereksinim: playwright + ffmpeg (test dosyaları için).
 import { createRequire } from 'node:module';
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync, cpSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
@@ -167,6 +167,67 @@ try {
     assert.deepEqual(errs, []);
     console.log(`✓ Dil (${locale}): ilk açılış ${expected}, butonla ${other}, yenileyince ${other}; hata: "${err.slice(0, 40)}…"`);
     await ctx.close();
+  }
+
+  // ---- SEO: yayındaki gibi önceden doldurulmuş sayfa ----
+  const pre = join(dir, 'prerendered');
+  cpSync(new URL('../public/', import.meta.url).pathname, pre, { recursive: true });
+  execFileSync(process.execPath, ['scripts/prerender.mjs', pre]);
+  const PRE_PORT = PORT + 1;
+  const preServer = spawn(process.execPath, ['scripts/serve.mjs', String(PRE_PORT), pre], { stdio: 'ignore' });
+  try {
+    await new Promise((r) => setTimeout(r, 400));
+    const base = `http://localhost:${PRE_PORT}/`;
+    // JavaScript kapalı (bot gibi): içerik İngilizce ve görünür
+    const nojs = await browser.newContext({ javaScriptEnabled: false, locale: 'tr-TR' });
+    const np = await nojs.newPage();
+    await np.goto(base);
+    const seen = await np.evaluate(() => ({
+      h1: document.querySelector('h1').innerText,
+      faq: document.querySelectorAll('.faq details').length,
+      faq1: document.querySelector('.faq h3').innerText,
+      visible: getComputedStyle(document.body).visibility,
+    }));
+    assert.match(seen.h1, /Turn your GIF into a WhatsApp sticker/);
+    assert.equal(seen.faq, 6);
+    assert.equal(seen.visible, 'visible');
+    console.log(`✓ SEO (JS kapalı): "${seen.h1}", ${seen.faq} SSS, sayfa görünür`);
+    await nojs.close();
+
+    const check = async (locale, query, expLang, expCanonical) => {
+      const ctx = await browser.newContext({ locale });
+      await setup(ctx);
+      const pg = await ctx.newPage();
+      await pg.goto(base + query);
+      await pg.waitForFunction(() => !document.documentElement.classList.contains('i18n-pending'));
+      const r = await pg.evaluate(() => ({
+        lang: document.documentElement.lang,
+        h1: document.querySelector('h1').innerText,
+        canonical: document.querySelector('link[rel=canonical]').href,
+        faq1: document.querySelector('.faq h3').innerText,
+      }));
+      assert.equal(r.lang, expLang, `${locale}${query}`);
+      assert.match(r.h1, expLang === 'tr' ? /WhatsApp çıkartmasına/ : /WhatsApp sticker/);
+      assert.match(r.faq1, expLang === 'tr' ? /nasıl yapılır/ : /How do I/);
+      assert.equal(r.canonical, `https://nolarth.github.io/sticker-maker/${expCanonical}`);
+      return { ctx, pg };
+    };
+    await (await check('tr-TR', '', 'tr', '')).ctx.close();
+    await (await check('en-US', '', 'en', '')).ctx.close();
+    await (await check('en-US', '?lang=tr', 'tr', '?lang=tr')).ctx.close();
+    const { ctx, pg } = await check('tr-TR', '?lang=en', 'en', '?lang=en');
+    await pg.click('#langToggle');
+    assert.match(pg.url(), /\?lang=tr$/);
+    assert.equal(await pg.$eval('link[rel=canonical]', (l) => l.href), 'https://nolarth.github.io/sticker-maker/?lang=tr');
+    await ctx.close();
+    console.log('✓ SEO: önceden doldurulmuş sayfa tr/en doğru açılıyor, ?lang= ve canonical çalışıyor, buton adresi güncelliyor');
+    for (const f of ['robots.txt', 'sitemap.xml', 'manifest.webmanifest', 'og-image.png', 'favicon.svg']) {
+      const res = await fetch(base + f);
+      assert.equal(res.status, 200, f);
+    }
+    assert.doesNotMatch(await (await fetch(base + 'sitemap.xml')).text(), /__LASTMOD__/);
+  } finally {
+    preServer.kill();
   }
 
   console.log('Tüm uçtan uca testler geçti.');

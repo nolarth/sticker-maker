@@ -2,12 +2,17 @@
   "name": "sticker-maker",
   "version": "2.0.0",
   "private": true,
-  "description": "GIF'leri (link veya dosya) tarayıcıda WhatsApp çıkartmasına (512x512 animasyonlu WebP) dönüştüren statik web sitesi",
+  "description": "Sticker Maker: turn X (Twitter), Giphy or your own GIFs into WhatsApp stickers in the browser — free, no app.",
+  "homepage": "https://nolarth.github.io/sticker-maker/",
+  "repository": { "type": "git", "url": "https://github.com/nolarth/sticker-maker.git" },
+  "keywords": ["whatsapp", "whatsapp-stickers", "sticker-maker", "gif", "gif-to-sticker", "twitter", "giphy", "webp", "ffmpeg-wasm", "github-pages"],
   "type": "module",
   "scripts": {
     "start": "node scripts/serve.mjs",
-    "test": "node --test test/links.test.js test/i18n.test.js",
-    "test:e2e": "node test/e2e.js"
+    "test": "node --test test/*.test.js",
+    "test:e2e": "node test/e2e.js",
+    "images": "node scripts/make-images.mjs",
+    "prerender": "node scripts/prerender.mjs"
   },
   "license": "MIT",
   "devDependencies": {

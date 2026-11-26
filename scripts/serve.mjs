@@ -3,12 +3,13 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 
-const root = resolve(new URL('../public', import.meta.url).pathname);
+// Kullanım: node scripts/serve.mjs [port] [klasör]
 const port = Number(process.argv[2] || process.env.PORT || 8080);
+const root = resolve(process.argv[3] || new URL('../public', import.meta.url).pathname);
 const types = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.wasm': 'application/wasm', '.json': 'application/json', '.svg': 'image/svg+xml',
-  '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp', '.md': 'text/plain; charset=utf-8',
+  '.png': 'image/png', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.webmanifest': 'application/manifest+json', '.gif': 'image/gif', '.webp': 'image/webp', '.md': 'text/plain; charset=utf-8',
 };
 
 http.createServer(async (req, res) => {

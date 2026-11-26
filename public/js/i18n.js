@@ -2,13 +2,14 @@
 // Dil seçimi: kullanıcının daha önce seçtiği dil > sistem dili Türkçe ise 'tr' > diğer her durumda 'en'.
 
 export const SITE_NAME = 'Sticker Maker';
+export const SITE_URL = 'https://nolarth.github.io/sticker-maker/';
 export const LANGS = ['tr', 'en'];
 const STORAGE_KEY = 'lang';
 
 const dict = {
   tr: {
-    title: `${SITE_NAME} — GIF'i WhatsApp çıkartmasına çevir`,
-    metaDesc: "X, Giphy veya kendi GIF'ini saniyeler içinde WhatsApp çıkartmasına dönüştür. Uygulama kurmak yok.",
+    title: `${SITE_NAME} — GIF'i WhatsApp Çıkartmasına Çevir (X, Giphy) · Ücretsiz`,
+    metaDesc: "X (Twitter), Giphy veya kendi GIF'ini saniyeler içinde animasyonlu WhatsApp çıkartmasına dönüştür. Ücretsiz, uygulama ve kayıt yok; dosyaların tarayıcında kalır.",
     themeToggle: 'Temayı değiştir',
     langToggle: 'Switch to English',
     heroTitle: "GIF'ini <span class=\"hl\">WhatsApp çıkartmasına</span> çevir",
@@ -95,12 +96,25 @@ const dict = {
     errPageLink: 'Bu bir sayfa linki, GIF değil. GIF\'e sağ tıklayıp "Resim adresini kopyala" ile doğrudan linki yapıştır.',
     errNotGif: 'Link bir GIF/görsel değil.',
     detail: 'Ayrıntı',
+    faqTitle: 'Sık sorulan sorular',
+    faq1q: "GIF'ten WhatsApp çıkartması nasıl yapılır?",
+    faq1a: "Linki yapıştır ya da dosyanı seç ve <b>Hazırla</b>'ya bas. <b>WhatsApp'a gönder</b> ile bir sohbete (kendine de olur) gönder. Android'de GIF'e dokun → <b>⋮</b> → <b>Çıkartma oluştur</b>; iPhone'da GIF'e basılı tut → <b>Kopyala</b> → mesaj kutusuna yapıştır → <b>Gönder</b>.",
+    faq2q: 'X (Twitter) GIF\'leri çalışıyor mu?',
+    faq2a: "Evet. Gönderinin linkini (<code>x.com/…/status/…</code>) yapıştırman yeterli; GIF otomatik bulunur. Giphy linkleri ve doğrudan <code>.gif</code> linkleri de çalışır.",
+    faq3q: 'Dosyalarım bir sunucuya yükleniyor mu?',
+    faq3a: 'Hayır. Dönüştürme tamamen tarayıcında yapılır; dosyaların cihazından çıkmaz.',
+    faq4q: 'Neden doğrudan çıkartma olarak gönderilmiyor?',
+    faq4a: "Web siteleri WhatsApp'a doğrudan çıkartma ekleyemez; tarayıcıdan paylaşılan dosyalar resim ya da GIF olarak gider. GIF olarak gönderip WhatsApp'ın kendi <b>Çıkartma oluştur</b> özelliğini kullanmak en kısa yol. Çıkartma bir kez oluşunca çıkartma panelinde kalır.",
+    faq5q: 'Ücretli mi, uygulama kurmam gerekiyor mu?',
+    faq5a: 'Tamamen ücretsiz; kayıt ya da uygulama gerekmez. Telefonda ve bilgisayarda çalışır.',
+    faq6q: 'Hangi dosyalar destekleniyor?',
+    faq6a: 'GIF, MP4, WebM, PNG ve JPG (en fazla 25 MB). Çıkartmalar en fazla 10 saniye olabilir; uzun GIF\'ler kırpılır. İstersen 512×512 şeffaf WebP çıkartma dosyası da indirebilirsin.',
     noscript: 'Bu site JavaScript gerektirir.',
   },
 
   en: {
-    title: `${SITE_NAME} — Turn GIFs into WhatsApp stickers`,
-    metaDesc: 'Turn X, Giphy or your own GIFs into WhatsApp stickers in seconds. No app to install.',
+    title: `${SITE_NAME} — GIF to WhatsApp Sticker Converter (X, Giphy) · Free`,
+    metaDesc: 'Turn X (Twitter), Giphy or your own GIFs into animated WhatsApp stickers in seconds. Free, no app or sign-up — your files stay in your browser.',
     themeToggle: 'Toggle theme',
     langToggle: "Türkçe'ye geç",
     heroTitle: 'Turn your GIF into a <span class="hl">WhatsApp sticker</span>',
@@ -184,6 +198,19 @@ const dict = {
     errPageLink: 'This is a page link, not a GIF. Right-click the GIF and use "Copy image address" to paste the direct link.',
     errNotGif: 'The link is not a GIF/image.',
     detail: 'Details',
+    faqTitle: 'Frequently asked questions',
+    faq1q: 'How do I make a WhatsApp sticker from a GIF?',
+    faq1a: 'Paste a link or pick a file and tap <b>Make sticker</b>. Use <b>Send to WhatsApp</b> to send it to any chat (yourself works too). On Android, tap the GIF → <b>⋮</b> → <b>Create sticker</b>; on iPhone, long-press the GIF → <b>Copy</b> → paste into the message box → <b>Send</b>.',
+    faq2q: 'Does it work with X (Twitter) GIFs?',
+    faq2a: 'Yes. Just paste the post link (<code>x.com/…/status/…</code>) and the GIF is found automatically. Giphy links and direct <code>.gif</code> links work too.',
+    faq3q: 'Are my files uploaded to a server?',
+    faq3a: 'No. Everything is converted in your browser; your files never leave your device.',
+    faq4q: "Why isn't it sent directly as a sticker?",
+    faq4a: "Websites can't add stickers to WhatsApp directly; files shared from a browser arrive as images or GIFs. Sending it as a GIF and using WhatsApp's own <b>Create sticker</b> option is the shortest path. Once created, the sticker stays in your sticker panel.",
+    faq5q: 'Is it free? Do I need to install an app?',
+    faq5a: 'Completely free — no sign-up and no app. Works on phones and computers.',
+    faq6q: 'Which files are supported?',
+    faq6a: "GIF, MP4, WebM, PNG and JPG (up to 25 MB). Stickers can be at most 10 seconds; longer GIFs are trimmed. You can also download a 512×512 transparent WebP sticker file.",
     noscript: 'This site requires JavaScript.',
   },
 };
@@ -198,8 +225,10 @@ export function setLang(l) {
   lang = LANGS.includes(l) ? l : 'en';
 }
 
-/** Kayıtlı tercih > sistem dili Türkçe ise 'tr' > 'en' */
-export function detectLang(nav = globalThis.navigator, storage = safeStorage()) {
+/** Adresteki ?lang= > kayıtlı tercih > sistem dili Türkçe ise 'tr' > 'en' */
+export function detectLang(nav = globalThis.navigator, storage = safeStorage(), search = globalThis.location ? globalThis.location.search : '') {
+  const fromUrl = new URLSearchParams(search || '').get('lang');
+  if (LANGS.includes(fromUrl)) return fromUrl;
   const saved = storage && storage.get();
   if (LANGS.includes(saved)) return saved;
   const prefs = (nav && (nav.languages && nav.languages.length ? nav.languages : [nav.language])) || [];

@@ -1,7 +1,7 @@
 // Sürüm etiketi yayın sırasında commit kimliğiyle değiştirilir (önbellek kırma) — bkz. .github/workflows/pages.yml
 import { convertToGif, convertToSticker, loadFFmpeg } from './converter.js?v=__V__';
 import { fetchMedia, looksLikeMedia } from './links.js?v=__V__';
-import { t, getLang, setLang, detectLang, saveLang, LANGS } from './i18n.js?v=__V__';
+import { t, getLang, setLang, detectLang, saveLang, LANGS, SITE_URL } from './i18n.js?v=__V__';
 
 const VERSION = '__V__';
 
@@ -41,6 +41,12 @@ const VERSION = '__V__';
     document.title = t('title');
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.content = t('metaDesc');
+    // Adreste ?lang= varsa canonical o dil sürümünü göstersin (hreflang ile uyumlu)
+    const hasLangParam = new URLSearchParams(location.search).has('lang');
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.href = hasLangParam ? `${SITE_URL}?lang=${lang}` : SITE_URL;
+    const ogLocale = document.querySelector('meta[property="og:locale"]');
+    if (ogLocale) ogLocale.content = lang === 'tr' ? 'tr_TR' : 'en_US';
     document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t(el.dataset.i18n)));
     document.querySelectorAll('[data-i18n-html]').forEach((el) => (el.innerHTML = t(el.dataset.i18nHtml)));
     document.querySelectorAll('[data-i18n-attr]').forEach((el) => {
@@ -62,6 +68,12 @@ const VERSION = '__V__';
   langToggle.addEventListener('click', () => {
     setLang(LANGS.find((l) => l !== getLang()));
     saveLang(getLang());
+    // Paylaşılan link seçilen dilde açılsın
+    try {
+      const u = new URL(location.href);
+      u.searchParams.set('lang', getLang());
+      history.replaceState(null, '', u);
+    } catch { /* yoksay */ }
     hideError();
     applyI18n();
   });
