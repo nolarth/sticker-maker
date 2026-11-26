@@ -103,7 +103,9 @@ async function fromVxTwitter(id, fetchImpl) {
 export async function resolveXMedia({ id, index }, fetchImpl = fetch) {
   let sawNotFound = false;
   let sawPrivate = false;
+  const details = [];
   for (const source of [fromFxTwitter, fromVxTwitter]) {
+    const label = source === fromFxTwitter ? 'FxTwitter' : 'VxTwitter';
     try {
       const r = await source(id, fetchImpl);
       if (r.notFound) { sawNotFound = true; continue; }
@@ -113,12 +115,13 @@ export async function resolveXMedia({ id, index }, fetchImpl = fetch) {
       throw Object.assign(new Error('Bu gönderide GIF, video veya fotoğraf yok.'), { final: true });
     } catch (e) {
       if (e.final) throw e;
+      details.push(`${label}: ${e && e.message ? e.message : e}`);
       /* sonraki kaynağı dene */
     }
   }
   if (sawPrivate) throw new Error('Bu gönderi gizli veya yaş kısıtlamalı; medyasına erişilemiyor.');
   if (sawNotFound) throw new Error('Gönderi bulunamadı (silinmiş olabilir).');
-  throw new Error('X gönderisi şu an okunamadı. Biraz sonra tekrar dene ya da GIF\'i indirip dosya olarak yükle.');
+  throw new Error(`X gönderisi okunamadı (adım 1/2: gönderi bilgisi). Biraz sonra tekrar dene ya da GIF'i indirip dosya olarak yükle.\n[Ayrıntı — ${details.join(' · ')}]`);
 }
 
 // ---------- İndirme ----------
@@ -127,8 +130,8 @@ async function download(url, fetchImpl, { blockedMsg } = {}) {
   let res;
   try {
     res = await fetchImpl(url, { mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' });
-  } catch {
-    throw new Error(blockedMsg || 'Bu site doğrudan indirmeye izin vermiyor. GIF\'i bilgisayarına indirip "Dosya yükle" sekmesinden yükle.');
+  } catch (e) {
+    throw new Error(blockedMsg ? `${blockedMsg}\n[Ayrıntı — ${url} · ${e && e.message}]` : 'Bu site doğrudan indirmeye izin vermiyor. GIF\'i bilgisayarına indirip "Dosya yükle" sekmesinden yükle.');
   }
   if (!res.ok) throw new Error(`Link açılamadı (HTTP ${res.status}).`);
   const len = Number(res.headers.get('content-length') || 0);
@@ -146,7 +149,7 @@ export async function fetchMedia(raw, fetchImpl = fetch) {
   if (x) {
     const media = await resolveXMedia(x, fetchImpl);
     const { bytes, type } = await download(media.url, fetchImpl, {
-      blockedMsg: 'X medyası indirilemedi. GIF\'i X\'ten indirip "Dosya yükle" sekmesinden yükle.',
+      blockedMsg: 'X medyası indirilemedi (adım 2/2: video dosyası). GIF\'i X\'ten indirip "Dosya yükle" sekmesinden yükle.',
     });
     if (!looksLikeMedia(type, bytes)) throw new Error('X\'ten gelen dosya bir GIF/video değil.');
     return { bytes, name: `x_${x.id}` };

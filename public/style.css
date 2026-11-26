@@ -158,6 +158,8 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .specs b { font-size: 18px; }
 .specs span { color: var(--muted); font-size: 13px; }
 
+.error { white-space: pre-line; }
+.foot .ver { opacity: .7; }
 .foot { text-align: center; color: var(--muted); font-size: 13px; padding: 0 16px 32px; }
 
 @media (max-width: 640px) {
