@@ -12,7 +12,6 @@ Dönüştürme tamamen **tarayıcıda** ([ffmpeg.wasm](https://github.com/ffmpeg
   - Animasyonlu WebP, sonsuz döngü, en fazla 10 sn (başlangıç saniyesi seçilebilir)
   - Animasyonlu ≤ 500 KB, sabit ≤ 100 KB — sığana kadar FPS ve kalite kademeli düşürülür
 - **Önizleme:** şeffaflık ızgarası + WhatsApp sohbet balonu görünümü
-- **Paylaş:** mobilde Web Share API ile doğrudan WhatsApp'a gönderme
 - **Paket:** 3–30 çıkartmayı toplayıp `.wastickers` dosyası olarak indirme (96×96 paket simgesi otomatik)
 - Açık/koyu tema, mobil uyumlu, Türkçe arayüz
 
@@ -53,6 +52,8 @@ npm install && npm run test:e2e   # uçtan uca: gerçek GIF'leri tarayıcıda d�
 
 ## Çıkartmayı WhatsApp'a ekleme
 
-- **WhatsApp Web/Masaüstü:** `.webp` dosyasını sohbete sürükle → çıkartma olarak gönderilir → favorilere ekle.
-- **Android:** "WhatsApp'ta paylaş" butonu veya `.wastickers` paketini bir çıkartma paketi uygulamasıyla aç.
-- **iPhone:** Çıkartmayı kendine gönder, gelen çıkartmaya basılı tutup favorilere ekle.
+Web siteleri WhatsApp'a doğrudan çıkartma ekleyemez (tarayıcının paylaş özelliği dosyayı fotoğraf olarak gönderir ve animasyon kaybolur). Sitedeki rehber, platforma göre şu yolları gösterir:
+
+- **Bilgisayar (en güvenilir):** `.webp` dosyasını WhatsApp Web/Masaüstü'nde bir sohbete (kendine) sürükle → animasyonlu çıkartma olarak gider → telefonda çıkartmaya dokunup favorilere ekle.
+- **Android, yalnızca telefon:** 3+ çıkartmayı pakete ekle → `.wastickers` indir → bu dosyayı içe aktarabilen bir çıkartma uygulamasıyla aç.
+- **iPhone:** bilgisayar yolunu kullan (iOS'ta paket içe aktarılamıyor).

@@ -109,7 +109,6 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .btn:active { transform: translateY(1px); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); }
 .btn.primary:hover { filter: brightness(1.06); }
-.btn.whatsapp { background: var(--wa); color: #052e16; }
 .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .btn.ghost:hover { background: var(--surface-2); }
 .btn.small { padding: 6px 12px; font-size: 14px; }
@@ -137,11 +136,16 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .stats li b { font-variant-numeric: tabular-nums; }
 .stats li.ok { background: var(--accent-soft); border-color: transparent; color: var(--text); }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.howto { margin-top: 18px; font-size: 14px; }
-.howto summary { cursor: pointer; font-weight: 600; }
-.howto ol { padding-left: 20px; color: var(--muted); }
+.howto { margin-top: 20px; font-size: 14px; border-top: 1px solid var(--border); padding-top: 16px; }
+.howto h3 { margin: 0 0 4px; font-size: 16px; }
+.howto-note { color: var(--muted); margin: 0 0 12px; font-size: 13px; }
+.howto-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.howto-tabs button { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
+.howto-tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--text); border-color: transparent; }
+.howto ol { padding-left: 20px; margin: 0; color: var(--muted); }
 .howto li { margin-bottom: 8px; }
 .howto b { color: var(--text); }
+.howto a { color: var(--accent); }
 
 .pack-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .pack-head h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }

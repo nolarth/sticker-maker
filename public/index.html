@@ -90,17 +90,34 @@
           <ul class="stats" id="stats"></ul>
           <div class="actions">
             <a class="btn primary" id="downloadBtn" download>⬇ WebP indir</a>
-            <button class="btn whatsapp" id="shareBtn" type="button" hidden>WhatsApp'ta paylaş</button>
             <button class="btn ghost" id="addPackBtn" type="button">＋ Pakete ekle</button>
           </div>
-          <details class="howto">
-            <summary>WhatsApp'a nasıl eklerim?</summary>
-            <ol>
-              <li><b>WhatsApp Web / Masaüstü:</b> İndirdiğin <code>.webp</code> dosyasını sohbete sürükle — çıkartma olarak gönderilir. Sonra çıkartmaya dokunup <i>Favorilere ekle</i>.</li>
-              <li><b>Android:</b> <i>WhatsApp'ta paylaş</i> butonuyla doğrudan gönder, ya da birkaç çıkartmayı pakete ekleyip <code>.wastickers</code> dosyasını bir çıkartma uygulamasıyla aç.</li>
-              <li><b>iPhone:</b> Dosyayı kaydet, WhatsApp'ta çıkartma olarak gönder; gelen çıkartmaya basılı tutup favorilere ekle.</li>
+          <div class="howto" id="howto">
+            <h3>WhatsApp'a nasıl eklenir?</h3>
+            <p class="howto-note">Web siteleri WhatsApp'a doğrudan çıkartma ekleyemez; tarayıcının "paylaş" özelliği dosyayı sıradan fotoğraf olarak gönderir. Bunun yerine şu yollardan birini kullan:</p>
+            <div class="howto-tabs" role="tablist">
+              <button type="button" role="tab" data-os="desktop">💻 Bilgisayar</button>
+              <button type="button" role="tab" data-os="android">🤖 Android</button>
+              <button type="button" role="tab" data-os="ios">📱 iPhone</button>
+            </div>
+            <ol data-os-panel="desktop">
+              <li><b>WebP indir</b> butonuyla dosyayı kaydet.</li>
+              <li><a href="https://web.whatsapp.com" target="_blank" rel="noopener">WhatsApp Web</a>'i ya da masaüstü uygulamasını aç, <b>kendine</b> (veya bir arkadaşına) bir sohbet aç.</li>
+              <li><code>.webp</code> dosyasını sohbet penceresine <b>sürükleyip bırak</b> ve gönder — <b>animasyonlu çıkartma</b> olarak gider.</li>
+              <li>Telefonunda gelen çıkartmaya dokun → <b>Favorilere ekle</b>. Artık çıkartma panelinde ⭐ altında.</li>
             </ol>
-          </details>
+            <ol data-os-panel="android" hidden>
+              <li><b>En kolayı:</b> Bilgisayarın varsa "Bilgisayar" sekmesindeki yolu kullan; çıkartma telefonuna da gelir.</li>
+              <li><b>Yalnızca telefonla:</b> En az 3 çıkartma üret, her birinde <b>＋ Pakete ekle</b>'ye bas, sonra <b>.wastickers indir</b>.</li>
+              <li>Play Store'dan <code>.wastickers</code> dosyalarını içe aktarabilen bir çıkartma uygulaması kur ("wastickers" diye arat).</li>
+              <li>İndirdiğin dosyayı o uygulamayla aç → <b>WhatsApp'a ekle</b>.</li>
+            </ol>
+            <ol data-os-panel="ios" hidden>
+              <li>iPhone'da paket dosyası içe aktarılamıyor; en güvenilir yol bilgisayar üzerinden.</li>
+              <li>Bilgisayarda <a href="https://web.whatsapp.com" target="_blank" rel="noopener">WhatsApp Web</a>'i aç, <code>.webp</code> dosyasını <b>kendine</b> sürükleyip gönder.</li>
+              <li>iPhone'da gelen çıkartmaya dokun → <b>Favorilere ekle</b>.</li>
+            </ol>
+          </div>
         </div>
       </div>
     </section>

@@ -20,7 +20,6 @@ const VERSION = '__V__';
   const chatImg = $('#chatImg');
   const stats = $('#stats');
   const downloadBtn = $('#downloadBtn');
-  const shareBtn = $('#shareBtn');
   const addPackBtn = $('#addPackBtn');
 
   const verEl = document.getElementById('ver');
@@ -174,15 +173,21 @@ const VERSION = '__V__';
     ];
     stats.innerHTML = items.join('');
 
-    const file = new File([blob], `${safeName(meta.name)}.webp`, { type: 'image/webp' });
-    shareBtn.hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
-    shareBtn.onclick = () => navigator.share({ files: [file] }).catch(() => {});
-
     addPackBtn.disabled = false;
     addPackBtn.textContent = '＋ Pakete ekle';
     result.hidden = false;
     result.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  // ---------- WhatsApp'a ekleme rehberi (platforma göre sekme) ----------
+  const howtoTabs = document.querySelectorAll('.howto-tabs button');
+  function showHowto(os) {
+    howtoTabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.os === os)));
+    document.querySelectorAll('[data-os-panel]').forEach((p) => (p.hidden = p.dataset.osPanel !== os));
+  }
+  howtoTabs.forEach((b) => b.addEventListener('click', () => showHowto(b.dataset.os)));
+  const ua = navigator.userAgent;
+  showHowto(/android/i.test(ua) ? 'android' : /iphone|ipad|ipod/i.test(ua) ? 'ios' : 'desktop');
 
   // ---------- Paket ----------
   const packSection = $('#pack');
@@ -195,7 +200,7 @@ const VERSION = '__V__';
     if (!current) return;
     if (pack.length >= 30) return showError('Bir paket en fazla 30 çıkartma içerebilir.');
     if (pack.some((p) => p.url === current.url)) return;
-    pack.push({ blob: current.blob, url: current.url, name: current.name });
+    pack.push({ blob: current.blob, url: current.url, name: current.name, animated: current.animated });
     addPackBtn.disabled = true;
     addPackBtn.textContent = '✓ Pakete eklendi';
     renderPack();
@@ -230,8 +235,11 @@ const VERSION = '__V__';
       packGrid.append(li);
     });
     const need = 3 - pack.length;
-    downloadPackBtn.disabled = need > 0;
-    packHint.textContent = need > 0
+    const mixed = pack.some((p) => p.animated) && pack.some((p) => !p.animated);
+    downloadPackBtn.disabled = need > 0 || mixed;
+    packHint.textContent = mixed
+      ? 'WhatsApp bir pakette animasyonlu ve sabit çıkartmaları karıştırmaya izin vermez — sabit olanları (veya animasyonluları) paketten çıkar.'
+      : need > 0
       ? `WhatsApp bir pakette en az 3 çıkartma ister — ${need} tane daha ekle.`
       : 'Hazır! .wastickers dosyasını Android\'de bir çıkartma paketi uygulamasıyla açıp WhatsApp\'a ekleyebilirsin.';
   }
@@ -261,7 +269,7 @@ const VERSION = '__V__';
     } catch (err) {
       showError('Paket oluşturulamadı: ' + err.message);
     } finally {
-      downloadPackBtn.disabled = pack.length < 3;
+      renderPack();
     }
   });
 
