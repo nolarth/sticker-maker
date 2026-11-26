@@ -6,7 +6,7 @@ Dönüştürme tamamen **tarayıcıda** ([ffmpeg.wasm](https://github.com/ffmpeg
 ## Özellikler
 
 - **Dosya yükleme:** sürükle-bırak, dosya seçici veya **Ctrl+V** ile yapıştırma (GIF, MP4, WebM, PNG, JPG — en fazla 25 MB)
-- **Link ile:** Giphy sayfa/medya linkleri ve doğrudan `.gif` linkleri (Tenor dahil, sitenin indirmeye izin vermesi gerekir — aşağıya bak)
+- **Link ile:** **X (Twitter)** gönderi linkleri (`x.com/.../status/...`, `/video/2` gibi sıra seçimi dahil), Giphy sayfa/medya linkleri ve doğrudan `.gif` linkleri (Tenor dahil, sitenin indirmeye izin vermesi gerekir — aşağıya bak)
 - **WhatsApp kurallarına otomatik uyum:**
   - 512×512 kare tuval (Sığdır = şeffaf dolgu / Kırp / Uzat)
   - Animasyonlu WebP, sonsuz döngü, en fazla 10 sn (başlangıç saniyesi seçilebilir)
@@ -37,6 +37,7 @@ npm install && npm run test:e2e   # uçtan uca: gerçek GIF'leri tarayıcıda d�
 - **İlk kullanımda ~30 MB** dönüştürücü indirilir (jsDelivr CDN'den, sonra tarayıcı önbelleğinde kalır).
 - Tarayıcıda dönüştürme sunucuya göre yavaştır: kısa bir GIF birkaç saniye, 10 sn'lik büyük bir GIF 15–30 sn sürebilir.
 - **Link ile indirme** yalnızca CORS'a izin veren sitelerde çalışır (Giphy, Tenor medya linkleri vb.). İzin vermeyen sitelerde GIF'i indirip dosya olarak yükle. Tenor **sayfa** linkleri (`tenor.com/view/...`) çalışmaz; GIF'e sağ tıklayıp *Resim adresini kopyala* ile `media.tenor.com/...gif` linkini kullan.
+- **X linkleri** herkese açık [FxTwitter](https://github.com/FxEmbed/FxEmbed) API'si (yedek: VxTwitter) üzerinden çözülür; bu servisler kapalıysa X linkleri çalışmaz. Gizli/yaş kısıtlamalı gönderiler desteklenmez. X'teki GIF'ler aslında MP4'tür ve doğrudan `video.twimg.com`'dan indirilir.
 - Animasyonlu **WebP** girdi desteklenmez (ffmpeg okuyamıyor).
 
 ## Yapı
@@ -46,7 +47,7 @@ npm install && npm run test:e2e   # uçtan uca: gerçek GIF'leri tarayıcıda d�
 | `public/index.html`, `style.css` | Arayüz |
 | `public/js/app.js` | Arayüz mantığı, paket, paylaşma |
 | `public/js/converter.js` | ffmpeg.wasm ile WebP üretimi ve boyut sınırına sığdırma |
-| `public/js/links.js` | Linkten indirme, Giphy link çözümleme |
+| `public/js/links.js` | Linkten indirme, Giphy ve X (Twitter) link çözümleme |
 | `public/js/zip.js` | `.wastickers` için küçük ZIP yazıcı |
 | `public/vendor/ffmpeg/` | `@ffmpeg/ffmpeg` ESM dosyaları (Worker aynı alan adından yüklenmeli) |
 
