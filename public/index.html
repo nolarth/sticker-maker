@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GIF → WhatsApp Çıkartma</title>
+  <meta name="description" content="GIF'leri link ile ya da dosya yükleyerek saniyeler içinde WhatsApp çıkartmasına dönüştür." />
+  <meta name="theme-color" content="#0b141a" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎞️</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="32" height="32"><path d="M6 4h14l8 8v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/><path d="M20 4v6a2 2 0 0 0 2 2h6" fill="none" stroke="var(--bg)" stroke-width="2"/><circle cx="12" cy="16" r="1.8" fill="var(--bg)"/><circle cx="19" cy="16" r="1.8" fill="var(--bg)"/><path d="M11 21q4.5 3.5 9 0" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <span>Stiker<b>Yap</b></span>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Temayı değiştir">◐</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>GIF'ini <span class="hl">WhatsApp çıkartmasına</span> çevir</h1>
+      <p>Link yapıştır ya da dosyanı sürükle. 512×512, şeffaf arka planlı, 500&nbsp;KB altı animasyonlu WebP — WhatsApp'ın istediği her şey otomatik.</p>
+    </section>
+
+    <section class="card converter" aria-label="Dönüştürücü">
+      <div class="tabs" role="tablist">
+        <button role="tab" class="tab active" aria-selected="true" data-tab="upload" id="tab-upload">📁 Dosya yükle</button>
+        <button role="tab" class="tab" aria-selected="false" data-tab="link" id="tab-link">🔗 Link gir</button>
+      </div>
+
+      <form id="form" novalidate>
+        <div class="panel" data-panel="upload">
+          <label class="drop" id="drop">
+            <input type="file" id="file" accept="image/gif,image/png,image/jpeg,video/mp4,video/webm" hidden />
+            <span class="drop-icon" aria-hidden="true">⬆</span>
+            <span class="drop-title">GIF'i buraya sürükle ya da <u>seç</u></span>
+            <span class="drop-sub">GIF, MP4, WebM, PNG, JPG · en fazla 25 MB · Ctrl+V ile yapıştırabilirsin</span>
+            <span class="drop-file" id="dropFile" hidden></span>
+          </label>
+        </div>
+
+        <div class="panel" data-panel="link" hidden>
+          <label class="field">
+            <span class="field-label">GIF linki</span>
+            <input type="url" id="url" inputmode="url" autocomplete="off" placeholder="https://media.giphy.com/media/…/giphy.gif" />
+          </label>
+          <p class="hint">Doğrudan .gif linkleri, Giphy ve Tenor sayfa linkleri desteklenir.</p>
+        </div>
+
+        <details class="opts">
+          <summary>Ayarlar</summary>
+          <div class="opts-grid">
+            <fieldset class="seg">
+              <legend>Yerleşim</legend>
+              <label><input type="radio" name="fit" value="fit" checked /><span>Sığdır</span></label>
+              <label><input type="radio" name="fit" value="crop" /><span>Kırp</span></label>
+              <label><input type="radio" name="fit" value="stretch" /><span>Uzat</span></label>
+            </fieldset>
+            <label class="field small">
+              <span class="field-label">Başlangıç (sn)</span>
+              <input type="number" id="start" min="0" step="0.1" value="0" />
+            </label>
+          </div>
+          <p class="hint">WhatsApp en fazla 10 saniyelik animasyon kabul eder; uzun GIF'ler başlangıçtan itibaren 10 sn'ye kırpılır.</p>
+        </details>
+
+        <button class="btn primary big" id="convertBtn" type="submit">
+          <span class="btn-label">Çıkartmaya dönüştür</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+        <p class="error" id="error" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <section class="card result" id="result" hidden aria-live="polite">
+      <div class="result-grid">
+        <div class="preview-wrap">
+          <div class="checker"><img id="previewImg" alt="Çıkartma önizlemesi" width="512" height="512" /></div>
+          <div class="chat" aria-hidden="true">
+            <div class="bubble-sticker"><img id="chatImg" alt="" /></div>
+            <span class="chat-time">şimdi ✓✓</span>
+          </div>
+        </div>
+        <div class="result-info">
+          <h2>Çıkartman hazır 🎉</h2>
+          <ul class="stats" id="stats"></ul>
+          <div class="actions">
+            <a class="btn primary" id="downloadBtn" download>⬇ WebP indir</a>
+            <button class="btn whatsapp" id="shareBtn" type="button" hidden>WhatsApp'ta paylaş</button>
+            <button class="btn ghost" id="addPackBtn" type="button">＋ Pakete ekle</button>
+          </div>
+          <details class="howto">
+            <summary>WhatsApp'a nasıl eklerim?</summary>
+            <ol>
+              <li><b>WhatsApp Web / Masaüstü:</b> İndirdiğin <code>.webp</code> dosyasını sohbete sürükle — çıkartma olarak gönderilir. Sonra çıkartmaya dokunup <i>Favorilere ekle</i>.</li>
+              <li><b>Android:</b> <i>WhatsApp'ta paylaş</i> butonuyla doğrudan gönder, ya da birkaç çıkartmayı pakete ekleyip <code>.wastickers</code> dosyasını bir çıkartma uygulamasıyla aç.</li>
+              <li><b>iPhone:</b> Dosyayı kaydet, WhatsApp'ta çıkartma olarak gönder; gelen çıkartmaya basılı tutup favorilere ekle.</li>
+            </ol>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="card pack" id="pack" hidden>
+      <div class="pack-head">
+        <h2>Çıkartma paketim <span class="count" id="packCount">0</span></h2>
+        <button class="btn ghost small" id="clearPack" type="button">Temizle</button>
+      </div>
+      <ul class="pack-grid" id="packGrid"></ul>
+      <div class="pack-form">
+        <label class="field small"><span class="field-label">Paket adı</span><input id="packName" maxlength="128" value="Çıkartmalarım" /></label>
+        <label class="field small"><span class="field-label">Yazar</span><input id="packAuthor" maxlength="128" value="StikerYap" /></label>
+        <button class="btn primary" id="downloadPack" type="button">⬇ .wastickers indir</button>
+      </div>
+      <p class="hint" id="packHint">WhatsApp bir pakette en az 3, en fazla 30 çıkartma ister.</p>
+    </section>
+
+    <section class="specs">
+      <div><b>512×512</b><span>kare tuval, şeffaf dolgu</span></div>
+      <div><b>&lt; 500 KB</b><span>otomatik kalite ayarı</span></div>
+      <div><b>≤ 10 sn</b><span>sonsuz döngü</span></div>
+      <div><b>WebP</b><span>WhatsApp'ın formatı</span></div>
+    </section>
+  </main>
+
+  <footer class="foot">Dosyaların sunucuda saklanmaz; dönüştürme bitince silinir.</footer>
+
+  <script src="zip.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

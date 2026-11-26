@@ -1,0 +1,17 @@
+{
+  "name": "sticker-maker",
+  "version": "1.0.0",
+  "description": "GIF'leri (link veya dosya) WhatsApp çıkartmasına (512x512 animasyonlu WebP) dönüştüren web uygulaması",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  }
+}
