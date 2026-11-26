@@ -3,16 +3,24 @@
 GIF'leri **link girerek** ya da **dosya yükleyerek** WhatsApp çıkartmasına dönüştüren web sitesi.
 Dönüştürme tamamen **tarayıcıda** ([ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm)) yapılır; sunucu gerekmez, site **GitHub Pages**'te çalışır ve dosyalar hiçbir yere yüklenmez.
 
+## Nasıl çalışır?
+
+1. X/Giphy linkini yapıştır ya da GIF/video dosyasını seç → **Hazırla**
+2. **WhatsApp'a gönder** (telefonda paylaşım ekranı açılır; bilgisayarda GIF indirilir)
+3. WhatsApp'ta:
+   - **Android:** GIF'e dokun → **Çıkartma oluştur** → Bitti
+   - **iPhone:** GIF'e basılı tut → **Kopyala** → mesaj kutusuna yapıştır → Gönder
+
+WhatsApp'ın kendi "GIF'ten çıkartma oluşturma" özelliği kullanıldığı için ek uygulama gerekmez.
+(Web siteleri WhatsApp'a doğrudan çıkartma ekleyemez; WebP paylaşınca fotoğraf olarak gider. GIF olarak gönderince WhatsApp onu GIF olarak tanır ve çıkartmaya çevirmeye izin verir.)
+
 ## Özellikler
 
-- **Dosya yükleme:** sürükle-bırak, dosya seçici veya **Ctrl+V** ile yapıştırma (GIF, MP4, WebM, PNG, JPG — en fazla 25 MB)
-- **Link ile:** **X (Twitter)** gönderi linkleri (`x.com/.../status/...`, `/video/2` gibi sıra seçimi dahil), Giphy sayfa/medya linkleri ve doğrudan `.gif` linkleri (Tenor dahil, sitenin indirmeye izin vermesi gerekir — aşağıya bak)
-- **WhatsApp kurallarına otomatik uyum:**
-  - 512×512 kare tuval (Sığdır = şeffaf dolgu / Kırp / Uzat)
-  - Animasyonlu WebP, sonsuz döngü, en fazla 10 sn (başlangıç saniyesi seçilebilir)
-  - Animasyonlu ≤ 500 KB, sabit ≤ 100 KB — sığana kadar FPS ve kalite kademeli düşürülür
-- **Önizleme:** şeffaflık ızgarası + WhatsApp sohbet balonu görünümü
-- **Paket:** 3–30 çıkartmayı toplayıp `.wastickers` dosyası olarak indirme (96×96 paket simgesi otomatik)
+- **Link ile:** **X (Twitter)** gönderi linkleri (`/photo/1`, `/video/2` dahil; paylaşım metni yapıştırılsa da link ayıklanır), Giphy linkleri, doğrudan `.gif` linkleri
+- **Dosya:** sürükle-bırak, dosya seçici veya Ctrl+V (GIF, MP4, WebM, PNG, JPG — en fazla 25 MB)
+- **Ayarlar:** Sığdır (oranı koru) / Kare kırp / Uzat, başlangıç saniyesi; en fazla 10 sn
+- GIF en fazla 8 MB olacak şekilde otomatik küçültülür
+- **Diğer seçenekler:** 512×512, şeffaf, ≤ 500 KB animasyonlu **WebP** çıkartma dosyası (çıkartma uygulamaları için)
 - Açık/koyu tema, mobil uyumlu, Türkçe arayüz
 
 ## GitHub Pages'te yayınlama
@@ -44,16 +52,7 @@ npm install && npm run test:e2e   # uçtan uca: gerçek GIF'leri tarayıcıda d�
 | Dosya | Görev |
 |---|---|
 | `public/index.html`, `style.css` | Arayüz |
-| `public/js/app.js` | Arayüz mantığı, paket, paylaşma |
-| `public/js/converter.js` | ffmpeg.wasm ile WebP üretimi ve boyut sınırına sığdırma |
+| `public/js/app.js` | Arayüz mantığı, WhatsApp'a gönderme (Web Share), cihaza göre adımlar |
+| `public/js/converter.js` | ffmpeg.wasm ile GIF ve WebP üretimi, boyut sınırına sığdırma |
 | `public/js/links.js` | Linkten indirme, Giphy ve X (Twitter) link çözümleme |
-| `public/js/zip.js` | `.wastickers` için küçük ZIP yazıcı |
 | `public/vendor/ffmpeg/` | `@ffmpeg/ffmpeg` ESM dosyaları (Worker aynı alan adından yüklenmeli) |
-
-## Çıkartmayı WhatsApp'a ekleme
-
-Web siteleri WhatsApp'a doğrudan çıkartma ekleyemez (tarayıcının paylaş özelliği dosyayı fotoğraf olarak gönderir ve animasyon kaybolur). Sitedeki rehber, platforma göre şu yolları gösterir:
-
-- **Bilgisayar (en güvenilir):** `.webp` dosyasını WhatsApp Web/Masaüstü'nde bir sohbete (kendine) sürükle → animasyonlu çıkartma olarak gider → telefonda çıkartmaya dokunup favorilere ekle.
-- **Android, yalnızca telefon:** 3+ çıkartmayı pakete ekle → `.wastickers` indir → bu dosyayı içe aktarabilen bir çıkartma uygulamasıyla aç.
-- **iPhone:** bilgisayar yolunu kullan (iOS'ta paket içe aktarılamıyor).

@@ -23,7 +23,7 @@
   <main>
     <section class="hero">
       <h1>GIF'ini <span class="hl">WhatsApp çıkartmasına</span> çevir</h1>
-      <p>Link yapıştır ya da dosyanı sürükle. 512×512, şeffaf arka planlı, 500&nbsp;KB altı animasyonlu WebP — WhatsApp'ın istediği her şey otomatik.</p>
+      <p>X/Giphy linkini yapıştır ya da dosyanı seç → <b>WhatsApp'a gönder</b> → WhatsApp'ta GIF'e dokunup <b>Çıkartma oluştur</b>. Uygulama kurmak yok.</p>
     </section>
 
     <section class="card converter" aria-label="Dönüştürücü">
@@ -65,11 +65,11 @@
               <input type="number" id="start" min="0" step="0.1" value="0" />
             </label>
           </div>
-          <p class="hint">WhatsApp en fazla 10 saniyelik animasyon kabul eder; uzun GIF'ler başlangıçtan itibaren 10 sn'ye kırpılır.</p>
+          <p class="hint">Çıkartmalar en fazla 10 saniye olabilir; uzun GIF'ler başlangıçtan itibaren 10 sn'ye kırpılır.</p>
         </details>
 
         <button class="btn primary big" id="convertBtn" type="submit">
-          <span class="btn-label">Çıkartmaya dönüştür</span>
+          <span class="btn-label">Hazırla</span>
           <span class="spinner" aria-hidden="true"></span>
         </button>
         <p class="error" id="error" role="alert" hidden></p>
@@ -86,67 +86,36 @@
           </div>
         </div>
         <div class="result-info">
-          <h2>Çıkartman hazır 🎉</h2>
+          <h2>Hazır 🎉</h2>
           <ul class="stats" id="stats"></ul>
-          <div class="actions">
-            <a class="btn primary" id="downloadBtn" download>⬇ WebP indir</a>
-            <button class="btn ghost" id="addPackBtn" type="button">＋ Pakete ekle</button>
-          </div>
-          <div class="howto" id="howto">
-            <h3>WhatsApp'a nasıl eklenir?</h3>
-            <p class="howto-note">Web siteleri WhatsApp'a doğrudan çıkartma ekleyemez; tarayıcının "paylaş" özelliği dosyayı sıradan fotoğraf olarak gönderir. Bunun yerine şu yollardan birini kullan:</p>
-            <div class="howto-tabs" role="tablist">
-              <button type="button" role="tab" data-os="desktop">💻 Bilgisayar</button>
-              <button type="button" role="tab" data-os="android">🤖 Android</button>
-              <button type="button" role="tab" data-os="ios">📱 iPhone</button>
-            </div>
-            <ol data-os-panel="desktop">
-              <li><b>WebP indir</b> butonuyla dosyayı kaydet.</li>
-              <li><a href="https://web.whatsapp.com" target="_blank" rel="noopener">WhatsApp Web</a>'i ya da masaüstü uygulamasını aç, <b>kendine</b> (veya bir arkadaşına) bir sohbet aç.</li>
-              <li><code>.webp</code> dosyasını sohbet penceresine <b>sürükleyip bırak</b> ve gönder — <b>animasyonlu çıkartma</b> olarak gider.</li>
-              <li>Telefonunda gelen çıkartmaya dokun → <b>Favorilere ekle</b>. Artık çıkartma panelinde ⭐ altında.</li>
-            </ol>
-            <ol data-os-panel="android" hidden>
-              <li><b>En kolayı:</b> Bilgisayarın varsa "Bilgisayar" sekmesindeki yolu kullan; çıkartma telefonuna da gelir.</li>
-              <li><b>Yalnızca telefonla:</b> En az 3 çıkartma üret, her birinde <b>＋ Pakete ekle</b>'ye bas, sonra <b>.wastickers indir</b>.</li>
-              <li>Play Store'dan <code>.wastickers</code> dosyalarını içe aktarabilen bir çıkartma uygulaması kur ("wastickers" diye arat).</li>
-              <li>İndirdiğin dosyayı o uygulamayla aç → <b>WhatsApp'a ekle</b>.</li>
-            </ol>
-            <ol data-os-panel="ios" hidden>
-              <li>iPhone'da paket dosyası içe aktarılamıyor; en güvenilir yol bilgisayar üzerinden.</li>
-              <li>Bilgisayarda <a href="https://web.whatsapp.com" target="_blank" rel="noopener">WhatsApp Web</a>'i aç, <code>.webp</code> dosyasını <b>kendine</b> sürükleyip gönder.</li>
-              <li>iPhone'da gelen çıkartmaya dokun → <b>Favorilere ekle</b>.</li>
-            </ol>
-          </div>
+
+          <button class="btn whatsapp big" id="sendBtn" type="button" hidden>
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.2z"/></svg>
+            <span>WhatsApp'a gönder</span>
+          </button>
+          <a class="btn primary big" id="gifDownloadBtn" download hidden>⬇ GIF'i indir</a>
+
+          <ol class="steps" id="steps"></ol>
+
+          <details class="more">
+            <summary>Diğer seçenekler</summary>
+            <p class="hint">Çıkartma dosyasını (512×512 WebP, şeffaf arka plan) doğrudan istersen — örneğin bir çıkartma uygulamasında kullanmak için:</p>
+            <button class="btn ghost small" id="webpBtn" type="button">⬇ WebP çıkartma dosyası indir</button>
+          </details>
         </div>
       </div>
     </section>
 
-    <section class="card pack" id="pack" hidden>
-      <div class="pack-head">
-        <h2>Çıkartma paketim <span class="count" id="packCount">0</span></h2>
-        <button class="btn ghost small" id="clearPack" type="button">Temizle</button>
-      </div>
-      <ul class="pack-grid" id="packGrid"></ul>
-      <div class="pack-form">
-        <label class="field small"><span class="field-label">Paket adı</span><input id="packName" maxlength="128" value="Çıkartmalarım" /></label>
-        <label class="field small"><span class="field-label">Yazar</span><input id="packAuthor" maxlength="128" value="StikerYap" /></label>
-        <button class="btn primary" id="downloadPack" type="button">⬇ .wastickers indir</button>
-      </div>
-      <p class="hint" id="packHint">WhatsApp bir pakette en az 3, en fazla 30 çıkartma ister.</p>
-    </section>
 
     <section class="specs">
-      <div><b>512×512</b><span>kare tuval, şeffaf dolgu</span></div>
-      <div><b>&lt; 500 KB</b><span>otomatik kalite ayarı</span></div>
-      <div><b>≤ 10 sn</b><span>sonsuz döngü</span></div>
-      <div><b>WebP</b><span>WhatsApp'ın formatı</span></div>
+      <div><b>1</b><span>Link yapıştır ya da GIF seç</span></div>
+      <div><b>2</b><span>WhatsApp'a gönder</span></div>
+      <div><b>3</b><span>GIF'e dokun → Çıkartma oluştur</span></div>
     </section>
   </main>
 
   <footer class="foot">Dönüştürme tamamen tarayıcında yapılır — dosyaların hiçbir sunucuya yüklenmez.<br />İlk kullanımda dönüştürücü (~30 MB) bir kez indirilir. · <span class="ver" id="ver">sürüm ?</span></footer>
 
-  <script src="js/zip.js?v=__V__"></script>
   <script type="module" src="js/app.js?v=__V__"></script>
   <noscript><p class="foot">Bu site JavaScript gerektirir.</p></noscript>
 </body>

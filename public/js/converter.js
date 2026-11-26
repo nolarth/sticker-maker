@@ -122,31 +122,77 @@ async function encode(input, { animated, fps, q, fit, start, duration }) {
   return data;
 }
 
+async function prepare(bytes, opts) {
+  const status = opts.onStatus || (() => {});
+  if (!ffmpeg) {
+    status('Dönüştürücü yükleniyor (ilk seferde ~30 MB)…');
+    await loadFFmpeg();
+  }
+  // writeFile baytları worker'a taşır (orijinal dizi boşalır); kaynak tekrar kullanılabilsin diye kopya gönder
+  await ffmpeg.writeFile('input', bytes.slice());
+  status('GIF inceleniyor…');
+  const info = await probe('input');
+  const animated = info.frames > 1;
+  let start = Math.max(0, Number(opts.start) || 0);
+  if (!info.duration || start >= info.duration) start = 0;
+  const available = info.duration ? info.duration - start : MAX_DURATION_SEC;
+  const duration = Math.max(0.1, Math.min(MAX_DURATION_SEC, available));
+  const fit = ['fit', 'crop', 'stretch'].includes(opts.fit) ? opts.fit : 'fit';
+  return { status, animated, start, duration, fit };
+}
+
+export const MAX_GIF_BYTES = 8 * 1024 * 1024;
+const GIF_ATTEMPTS = [
+  { side: 480, fps: 15, colors: 160 },
+  { side: 400, fps: 12, colors: 128 },
+  { side: 320, fps: 10, colors: 96 },
+  { side: 256, fps: 8, colors: 64 },
+];
+
+/**
+ * WhatsApp'a GIF olarak gönderilecek dosyayı üretir. WhatsApp sohbetindeki GIF'ten
+ * kendi "Çıkartma oluştur" özelliğiyle animasyonlu çıkartma yapılabiliyor.
+ * fit: oranı koru (dolgu yok) · crop: kare kırp · stretch: kareye uzat
+ */
+export async function convertToGif(bytes, opts = {}) {
+  const { status, animated, start, duration, fit } = await prepare(bytes, opts);
+  try {
+    let last = null;
+    for (let i = 0; i < GIF_ATTEMPTS.length; i++) {
+      const { side, fps, colors } = GIF_ATTEMPTS[i];
+      status(i === 0 ? 'GIF hazırlanıyor…' : `GIF küçültülüyor (deneme ${i + 1})…`);
+      const size = fit === 'crop'
+        ? `scale=${side}:${side}:force_original_aspect_ratio=increase:flags=lanczos,crop=${side}:${side}`
+        : fit === 'stretch'
+          ? `scale=${side}:${side}:flags=lanczos`
+          : `scale=${side}:${side}:force_original_aspect_ratio=decrease:flags=lanczos`;
+      const vf = `${animated ? `fps=${fps},` : ''}${size},split[a][b];[a]palettegen=max_colors=${colors}:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle`;
+      const args = ['-hide_banner', '-loglevel', 'error', '-y'];
+      if (start > 0) args.push('-ss', String(start));
+      args.push('-i', 'input');
+      if (animated) args.push('-t', duration.toFixed(2));
+      else args.push('-frames:v', '1');
+      args.push('-vf', vf, '-an', '-loop', '0', '-f', 'gif', 'out.gif');
+      await exec(args);
+      const data = await ffmpeg.readFile('out.gif');
+      await ffmpeg.deleteFile('out.gif').catch(() => {});
+      last = { data, animated, bytes: data.length, duration: animated ? duration : 0 };
+      if (data.length <= MAX_GIF_BYTES) return last;
+    }
+    return last;
+  } finally {
+    await ffmpeg.deleteFile('input').catch(() => {});
+  }
+}
+
 /**
  * @param {Uint8Array} bytes  girdi dosyası
  * @param {{fit?: string, start?: number, onStatus?: (s: string) => void}} opts
  */
 export async function convertToSticker(bytes, opts = {}) {
-  const status = opts.onStatus || (() => {});
-  const fit = ['fit', 'crop', 'stretch'].includes(opts.fit) ? opts.fit : 'fit';
-
-  if (!ffmpeg) {
-    status('Dönüştürücü yükleniyor (ilk seferde ~30 MB)…');
-    await loadFFmpeg();
-  }
-
+  const { status, animated, start, duration, fit } = await prepare(bytes, opts);
   const input = 'input';
-  await ffmpeg.writeFile(input, bytes);
   try {
-    status('GIF inceleniyor…');
-    const info = await probe(input);
-    const animated = info.frames > 1;
-
-    let start = Math.max(0, Number(opts.start) || 0);
-    if (!info.duration || start >= info.duration) start = 0;
-    const available = info.duration ? info.duration - start : MAX_DURATION_SEC;
-    const duration = Math.max(0.1, Math.min(MAX_DURATION_SEC, available));
-
     const limit = animated ? MAX_ANIMATED_BYTES : MAX_STATIC_BYTES;
     let smallest = Infinity;
     for (let i = 0; i < ATTEMPTS.length; i++) {

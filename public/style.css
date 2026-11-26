@@ -109,6 +109,8 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .btn:active { transform: translateY(1px); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); }
 .btn.primary:hover { filter: brightness(1.06); }
+.btn.whatsapp { background: var(--wa); color: #052e16; }
+.btn.whatsapp:hover { filter: brightness(1.05); }
 .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .btn.ghost:hover { background: var(--surface-2); }
 .btn.small { padding: 6px 12px; font-size: 14px; }
@@ -136,28 +138,11 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .stats li b { font-variant-numeric: tabular-nums; }
 .stats li.ok { background: var(--accent-soft); border-color: transparent; color: var(--text); }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.howto { margin-top: 20px; font-size: 14px; border-top: 1px solid var(--border); padding-top: 16px; }
-.howto h3 { margin: 0 0 4px; font-size: 16px; }
-.howto-note { color: var(--muted); margin: 0 0 12px; font-size: 13px; }
-.howto-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-.howto-tabs button { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
-.howto-tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--text); border-color: transparent; }
-.howto ol { padding-left: 20px; margin: 0; color: var(--muted); }
-.howto li { margin-bottom: 8px; }
-.howto b { color: var(--text); }
-.howto a { color: var(--accent); }
 
-.pack-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.pack-head h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
-.count { background: var(--accent); color: var(--accent-ink); font-size: 13px; border-radius: 999px; padding: 1px 9px; }
-.pack-grid { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
-.pack-grid li { position: relative; aspect-ratio: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-.pack-grid img { width: 100%; height: 100%; object-fit: contain; }
-.pack-grid button { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; font-size: 14px; line-height: 1; }
-.pack-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-.pack-form .field { flex: 1 1 160px; }
 
-.specs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 8px; }
+
+
+.specs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px; }
 .specs div { padding: 14px; border-radius: 14px; border: 1px solid var(--border); display: flex; flex-direction: column; }
 .specs b { font-size: 18px; }
 .specs span { color: var(--muted); font-size: 13px; }
@@ -169,7 +154,17 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 @media (max-width: 640px) {
   .result-grid { grid-template-columns: 1fr; }
   .preview-wrap { max-width: 320px; width: 100%; margin: 0 auto; }
-  .specs { grid-template-columns: repeat(2, 1fr); }
+  .specs { grid-template-columns: 1fr; }
   .card { padding: 16px; }
   .actions .btn { flex: 1 1 auto; }
 }
+
+.result-info .btn.big { margin-top: 4px; }
+.steps { margin: 16px 0 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 10px; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; font-size: 15px; }
+.steps li::before { content: counter(step); width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; display: grid; place-items: center; font-size: 14px; }
+.steps b { color: var(--text); }
+.steps .sub { display: block; color: var(--muted); font-size: 13px; }
+.more { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 14px; }
+.more summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+.more .btn { margin-top: 8px; }

@@ -1,5 +1,5 @@
 // Sürüm etiketi yayın sırasında commit kimliğiyle değiştirilir (önbellek kırma) — bkz. .github/workflows/pages.yml
-import { convertToSticker, loadFFmpeg } from './converter.js?v=__V__';
+import { convertToGif, convertToSticker, loadFFmpeg } from './converter.js?v=__V__';
 import { fetchMedia, looksLikeMedia } from './links.js?v=__V__';
 
 const VERSION = '__V__';
@@ -19,16 +19,19 @@ const VERSION = '__V__';
   const previewImg = $('#previewImg');
   const chatImg = $('#chatImg');
   const stats = $('#stats');
-  const downloadBtn = $('#downloadBtn');
-  const addPackBtn = $('#addPackBtn');
+  const sendBtn = $('#sendBtn');
+  const gifDownloadBtn = $('#gifDownloadBtn');
+  const webpBtn = $('#webpBtn');
+  const stepsEl = $('#steps');
 
   const verEl = document.getElementById('ver');
   if (verEl) verEl.textContent = `sürüm ${VERSION.slice(0, 7)}`;
 
   let mode = 'upload';
   let selectedFile = null;
-  let current = null; // { blob, url, name, animated }
-  const pack = []; // { blob, url, name }
+  let current = null; // { gif: File, url, name, source: Uint8Array, opts }
+  const ua = navigator.userAgent;
+  const platform = /android/i.test(ua) ? 'android' : /iphone|ipad|ipod/i.test(ua) ? 'ios' : 'desktop';
 
   // ---------- Tema ----------
   const themeToggle = $('#themeToggle');
@@ -125,19 +128,12 @@ const VERSION = '__V__';
         setStatus('GIF indiriliyor…');
         ({ bytes, name } = await fetchMedia(u));
       }
-      const r = await convertToSticker(bytes, {
+      const opts = {
         fit: (form.querySelector('input[name="fit"]:checked') || {}).value || 'fit',
         start: Math.max(0, parseFloat(startInput.value) || 0),
-        onStatus: setStatus,
-      });
-      showResult(new Blob([r.data], { type: 'image/webp' }), {
-        name,
-        animated: r.animated,
-        bytes: r.bytes,
-        fps: r.fps,
-        quality: r.quality,
-        duration: r.duration,
-      });
+      };
+      const r = await convertToGif(bytes, { ...opts, onStatus: setStatus });
+      showResult(r, { name, source: bytes, opts });
     } catch (err) {
       console.error(err);
       showError(err.message || 'Bir şeyler ters gitti.');
@@ -153,146 +149,90 @@ const VERSION = '__V__';
   urlInput.addEventListener('input', warmUp, { once: true });
   document.addEventListener('paste', warmUp, { once: true });
 
-  function showResult(blob, meta) {
-    if (current && !pack.some((p) => p.url === current.url)) URL.revokeObjectURL(current.url);
+  // WhatsApp'ın kendi özelliği: sohbetteki GIF'ten animasyonlu çıkartma oluşturma
+  const STEPS = {
+    android: [
+      `<b>WhatsApp'a gönder</b>'e bas, bir sohbet seç <span class="sub">Kendine de gönderebilirsin (en üstteki "Siz" sohbeti).</span>`,
+      `Sohbette GIF'e <b>dokun</b> → <b>Çıkartma oluştur</b> → <b>Bitti</b> ✓ <span class="sub">Çıkartma gönderilir ve çıkartma panelinde kalır.</span>`,
+    ],
+    ios: [
+      `<b>WhatsApp'a gönder</b>'e bas, bir sohbet seç <span class="sub">Kendine de gönderebilirsin.</span>`,
+      `Sohbette GIF'e <b>basılı tut</b> → <b>Kopyala</b> → mesaj kutusuna <b>yapıştır</b> → <b>Gönder</b> ✓ <span class="sub">Çıkartma olarak gider; çıkartmaya basılı tutup <b>Favorilere ekle</b>.</span>`,
+    ],
+    desktop: [
+      `<b>GIF'i indir</b> ve <a href="https://web.whatsapp.com" target="_blank" rel="noopener">WhatsApp Web</a>'de kendine gönder <span class="sub">Ya da bu siteyi telefonunda aç — tek dokunuşla gönderilir.</span>`,
+      `Telefonda GIF'e <b>dokun</b> → <b>Çıkartma oluştur</b> → <b>Bitti</b> ✓ <span class="sub">iPhone'da: GIF'e basılı tut → Kopyala → mesaj kutusuna yapıştır → Gönder.</span>`,
+    ],
+  };
+
+  function showResult(r, meta) {
+    if (current) URL.revokeObjectURL(current.url);
+    const blob = new Blob([r.data], { type: 'image/gif' });
+    const fileName = `${safeName(meta.name)}.gif`;
+    const gif = new File([blob], fileName, { type: 'image/gif' });
     const url = URL.createObjectURL(blob);
-    current = { blob, url, name: meta.name, animated: meta.animated };
+    current = { gif, url, name: meta.name, source: meta.source, opts: meta.opts };
+
     previewImg.src = url;
     chatImg.src = url;
-    downloadBtn.href = url;
-    downloadBtn.download = `${safeName(meta.name)}.webp`;
+    gifDownloadBtn.href = url;
+    gifDownloadBtn.download = fileName;
+    stats.innerHTML = [
+      r.animated ? `<li class="ok">✓ Animasyonlu · <b>${r.duration.toFixed(1)} sn</b></li>` : '<li>Sabit görsel</li>',
+      `<li><b>${formatBytes(r.bytes)}</b></li>`,
+    ].join('');
 
-    const limit = meta.animated ? 500 : 100;
-    const items = [
-      `<li class="ok">✓ WhatsApp uyumlu</li>`,
-      `<li><b>512×512</b></li>`,
-      `<li><b>${formatBytes(meta.bytes)}</b> / ${limit} KB</li>`,
-      meta.animated ? `<li>Animasyonlu · <b>${meta.duration.toFixed(1)} sn</b></li>` : `<li>Sabit görsel</li>`,
-      meta.animated && meta.fps ? `<li><b>${meta.fps}</b> fps</li>` : '',
-      `<li>Kalite <b>${meta.quality}</b></li>`,
-    ];
-    stats.innerHTML = items.join('');
+    const canSend = platform !== 'desktop' && !!(navigator.canShare && navigator.canShare({ files: [gif] }));
+    sendBtn.hidden = !canSend;
+    gifDownloadBtn.hidden = canSend;
+    stepsEl.innerHTML = STEPS[canSend ? platform : 'desktop'].map((t) => `<li><span>${t}</span></li>`).join('');
 
-    addPackBtn.disabled = false;
-    addPackBtn.textContent = '＋ Pakete ekle';
+    webpBtn.disabled = false;
+    webpBtn.textContent = '⬇ WebP çıkartma dosyası indir';
     result.hidden = false;
     result.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // ---------- WhatsApp'a ekleme rehberi (platforma göre sekme) ----------
-  const howtoTabs = document.querySelectorAll('.howto-tabs button');
-  function showHowto(os) {
-    howtoTabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.os === os)));
-    document.querySelectorAll('[data-os-panel]').forEach((p) => (p.hidden = p.dataset.osPanel !== os));
-  }
-  howtoTabs.forEach((b) => b.addEventListener('click', () => showHowto(b.dataset.os)));
-  const ua = navigator.userAgent;
-  showHowto(/android/i.test(ua) ? 'android' : /iphone|ipad|ipod/i.test(ua) ? 'ios' : 'desktop');
-
-  // ---------- Paket ----------
-  const packSection = $('#pack');
-  const packGrid = $('#packGrid');
-  const packCount = $('#packCount');
-  const packHint = $('#packHint');
-  const downloadPackBtn = $('#downloadPack');
-
-  addPackBtn.addEventListener('click', () => {
+  sendBtn.addEventListener('click', async () => {
     if (!current) return;
-    if (pack.length >= 30) return showError('Bir paket en fazla 30 çıkartma içerebilir.');
-    if (pack.some((p) => p.url === current.url)) return;
-    pack.push({ blob: current.blob, url: current.url, name: current.name, animated: current.animated });
-    addPackBtn.disabled = true;
-    addPackBtn.textContent = '✓ Pakete eklendi';
-    renderPack();
-  });
-
-  $('#clearPack').addEventListener('click', () => {
-    pack.splice(0).forEach((p) => { if (!current || p.url !== current.url) URL.revokeObjectURL(p.url); });
-    if (current) { addPackBtn.disabled = false; addPackBtn.textContent = '＋ Pakete ekle'; }
-    renderPack();
-  });
-
-  function renderPack() {
-    packSection.hidden = pack.length === 0;
-    packCount.textContent = String(pack.length);
-    packGrid.innerHTML = '';
-    pack.forEach((p, i) => {
-      const li = document.createElement('li');
-      const img = document.createElement('img');
-      img.src = p.url;
-      img.alt = p.name;
-      const rm = document.createElement('button');
-      rm.type = 'button';
-      rm.textContent = '×';
-      rm.setAttribute('aria-label', 'Paketten çıkar');
-      rm.onclick = () => {
-        const [removed] = pack.splice(i, 1);
-        if (current && removed.url === current.url) { addPackBtn.disabled = false; addPackBtn.textContent = '＋ Pakete ekle'; }
-        else URL.revokeObjectURL(removed.url);
-        renderPack();
-      };
-      li.append(img, rm);
-      packGrid.append(li);
-    });
-    const need = 3 - pack.length;
-    const mixed = pack.some((p) => p.animated) && pack.some((p) => !p.animated);
-    downloadPackBtn.disabled = need > 0 || mixed;
-    packHint.textContent = mixed
-      ? 'WhatsApp bir pakette animasyonlu ve sabit çıkartmaları karıştırmaya izin vermez — sabit olanları (veya animasyonluları) paketten çıkar.'
-      : need > 0
-      ? `WhatsApp bir pakette en az 3 çıkartma ister — ${need} tane daha ekle.`
-      : 'Hazır! .wastickers dosyasını Android\'de bir çıkartma paketi uygulamasıyla açıp WhatsApp\'a ekleyebilirsin.';
-  }
-
-  downloadPackBtn.addEventListener('click', async () => {
-    if (pack.length < 3) return;
-    downloadPackBtn.disabled = true;
     try {
-      const files = [];
-      const title = $('#packName').value.trim() || 'Çıkartmalarım';
-      const author = $('#packAuthor').value.trim() || 'StikerYap';
-      const enc = new TextEncoder();
-      files.push({ name: 'title.txt', data: enc.encode(title) });
-      files.push({ name: 'author.txt', data: enc.encode(author) });
-      files.push({ name: 'tray.png', data: await makeTray(pack[0].url) });
-      for (let i = 0; i < pack.length; i++) {
-        files.push({ name: `${String(i + 1).padStart(2, '0')}.webp`, data: new Uint8Array(await pack[i].blob.arrayBuffer()) });
-      }
-      const zip = window.makeZip(files);
+      await navigator.share({ files: [current.gif] });
+    } catch (err) {
+      if (err && err.name === 'AbortError') return; // kullanıcı vazgeçti
+      // Paylaşım açılamazsa indirmeye düş
+      gifDownloadBtn.hidden = false;
+      showError('Paylaşım ekranı açılamadı. GIF\'i indirip WhatsApp\'tan gönderebilirsin.');
+    }
+  });
+
+  webpBtn.addEventListener('click', async () => {
+    if (!current) return;
+    webpBtn.disabled = true;
+    try {
+      const r = await convertToSticker(current.source, {
+        ...current.opts,
+        onStatus: (t) => (webpBtn.textContent = t),
+      });
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(zip);
-      a.download = `${safeName(title)}.wastickers`;
+      a.href = URL.createObjectURL(new Blob([r.data], { type: 'image/webp' }));
+      a.download = `${safeName(current.name)}.webp`;
       document.body.append(a);
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+      webpBtn.textContent = '✓ WebP indirildi';
     } catch (err) {
-      showError('Paket oluşturulamadı: ' + err.message);
-    } finally {
-      renderPack();
+      showError(err.message || 'WebP oluşturulamadı.');
+      webpBtn.textContent = '⬇ WebP çıkartma dosyası indir';
+      webpBtn.disabled = false;
     }
   });
-
-  // Paket simgesi: 96x96 PNG
-  function makeTray(src) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        c.width = c.height = 96;
-        c.getContext('2d').drawImage(img, 0, 0, 96, 96);
-        c.toBlob(async (b) => (b ? resolve(new Uint8Array(await b.arrayBuffer())) : reject(new Error('simge'))), 'image/png');
-      };
-      img.onerror = () => reject(new Error('simge oluşturulamadı'));
-      img.src = src;
-    });
-  }
 
   // ---------- Yardımcılar ----------
   function setLoading(on) {
     btn.disabled = on;
     btn.classList.toggle('loading', on);
-    setStatus(on ? 'Hazırlanıyor…' : 'Çıkartmaya dönüştür');
+    setStatus(on ? 'Hazırlanıyor…' : 'Hazırla');
   }
   function setStatus(text) { btn.querySelector('.btn-label').textContent = text; }
   function showError(msg) { errorBox.textContent = msg; errorBox.hidden = false; }
