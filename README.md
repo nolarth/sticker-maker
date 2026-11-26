@@ -1,11 +1,12 @@
 # StikerYap — GIF → WhatsApp Çıkartma
 
 GIF'leri **link girerek** ya da **dosya yükleyerek** WhatsApp çıkartmasına dönüştüren web sitesi.
+Dönüştürme tamamen **tarayıcıda** ([ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm)) yapılır; sunucu gerekmez, site **GitHub Pages**'te çalışır ve dosyalar hiçbir yere yüklenmez.
 
 ## Özellikler
 
 - **Dosya yükleme:** sürükle-bırak, dosya seçici veya **Ctrl+V** ile yapıştırma (GIF, MP4, WebM, PNG, JPG — en fazla 25 MB)
-- **Link ile:** doğrudan `.gif` linkleri, **Giphy** sayfa linkleri (`giphy.com/gifs/...`) ve sayfadaki `og:image`/`og:video` etiketleri üzerinden **Tenor** gibi siteler
+- **Link ile:** Giphy sayfa/medya linkleri ve doğrudan `.gif` linkleri (Tenor dahil, sitenin indirmeye izin vermesi gerekir — aşağıya bak)
 - **WhatsApp kurallarına otomatik uyum:**
   - 512×512 kare tuval (Sığdır = şeffaf dolgu / Kırp / Uzat)
   - Animasyonlu WebP, sonsuz döngü, en fazla 10 sn (başlangıç saniyesi seçilebilir)
@@ -15,35 +16,39 @@ GIF'leri **link girerek** ya da **dosya yükleyerek** WhatsApp çıkartmasına d
 - **Paket:** 3–30 çıkartmayı toplayıp `.wastickers` dosyası olarak indirme (96×96 paket simgesi otomatik)
 - Açık/koyu tema, mobil uyumlu, Türkçe arayüz
 
-## Çalıştırma
+## GitHub Pages'te yayınlama
 
-Gereksinimler: Node.js 18+ ve **ffmpeg** (libwebp desteğiyle).
+1. Depoda **Settings → Pages → Build and deployment → Source** ayarını **GitHub Actions** yap.
+2. Varsayılan dala push et (veya **Actions → GitHub Pages'e yayınla → Run workflow**).
+3. Site `https://<kullanıcı-adı>.github.io/sticker-maker/` adresinde yayına girer.
 
-```bash
-npm install
-npm start          # http://localhost:3000
-npm test
-```
+İş akışı (`.github/workflows/pages.yml`) önce testleri çalıştırır, sonra `public/` klasörünü yayınlar. Derleme adımı yoktur.
 
-Docker ile:
+## Yerelde çalıştırma
 
 ```bash
-docker build -t stikeryap .
-docker run -p 3000:3000 stikeryap
+npm start          # http://localhost:8080 (bağımlılıksız statik sunucu)
+npm test           # birim testleri
+npm install && npm run test:e2e   # uçtan uca: gerçek GIF'leri tarayıcıda dönüştürür (playwright + ffmpeg gerekir)
 ```
 
-Ortam değişkenleri: `PORT` (varsayılan 3000), `MAX_CONCURRENT` (aynı anda çalışacak ffmpeg sayısı, varsayılan 2).
+## Bilinen sınırlar
 
-## Mimari
+- **İlk kullanımda ~30 MB** dönüştürücü indirilir (jsDelivr CDN'den, sonra tarayıcı önbelleğinde kalır).
+- Tarayıcıda dönüştürme sunucuya göre yavaştır: kısa bir GIF birkaç saniye, 10 sn'lik büyük bir GIF 15–30 sn sürebilir.
+- **Link ile indirme** yalnızca CORS'a izin veren sitelerde çalışır (Giphy, Tenor medya linkleri vb.). İzin vermeyen sitelerde GIF'i indirip dosya olarak yükle. Tenor **sayfa** linkleri (`tenor.com/view/...`) çalışmaz; GIF'e sağ tıklayıp *Resim adresini kopyala* ile `media.tenor.com/...gif` linkini kullan.
+- Animasyonlu **WebP** girdi desteklenmez (ffmpeg okuyamıyor).
+
+## Yapı
 
 | Dosya | Görev |
 |---|---|
-| `server.js` | Express sunucu, `POST /api/convert` (multipart `file` veya `url`, `fit`, `start`), hız ve eşzamanlılık sınırı |
-| `lib/convert.js` | ffprobe + ffmpeg ile WebP üretimi, boyut sınırına sığdırma döngüsü |
-| `lib/fetchUrl.js` | Linkten güvenli indirme (özel IP/SSRF engeli, DNS sabitleme, boyut/zaman sınırı, yönlendirme takibi), Giphy/Tenor çözümleme |
-| `public/` | Arayüz (bağımlılıksız HTML/CSS/JS, `.wastickers` için küçük ZIP yazıcı) |
-
-Yüklenen dosyalar diske yalnızca dönüştürme süresince geçici olarak yazılır ve hemen silinir.
+| `public/index.html`, `style.css` | Arayüz |
+| `public/js/app.js` | Arayüz mantığı, paket, paylaşma |
+| `public/js/converter.js` | ffmpeg.wasm ile WebP üretimi ve boyut sınırına sığdırma |
+| `public/js/links.js` | Linkten indirme, Giphy link çözümleme |
+| `public/js/zip.js` | `.wastickers` için küçük ZIP yazıcı |
+| `public/vendor/ffmpeg/` | `@ffmpeg/ffmpeg` ESM dosyaları (Worker aynı alan adından yüklenmeli) |
 
 ## Çıkartmayı WhatsApp'a ekleme
 

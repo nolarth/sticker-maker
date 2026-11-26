@@ -1,5 +1,7 @@
-(function () {
-  'use strict';
+import { convertToSticker, loadFFmpeg } from './converter.js';
+import { fetchMedia, looksLikeMedia } from './links.js';
+
+{
 
   const $ = (s) => document.querySelector(s);
   const form = $('#form');
@@ -101,43 +103,48 @@
     e.preventDefault();
     hideError();
 
-    const fd = new FormData();
-    if (mode === 'upload') {
-      if (!selectedFile) return showError('Önce bir GIF seç ya da sürükle.');
-      fd.append('file', selectedFile, selectedFile.name || 'paste.gif');
-    } else {
-      const u = urlInput.value.trim();
-      if (!/^https?:\/\/\S+$/i.test(u)) return showError('Geçerli bir link gir (https:// ile başlamalı).');
-      fd.append('url', u);
-    }
-    fd.append('fit', (form.querySelector('input[name="fit"]:checked') || {}).value || 'fit');
-    fd.append('start', String(Math.max(0, parseFloat(startInput.value) || 0)));
-
     setLoading(true);
     try {
-      const res = await fetch('/api/convert', { method: 'POST', body: fd });
-      if (!res.ok) {
-        let msg = 'Bir şeyler ters gitti.';
-        try { msg = (await res.json()).error || msg; } catch { /* yoksay */ }
-        throw new Error(msg);
+      let bytes;
+      let name = 'sticker';
+      if (mode === 'upload') {
+        if (!selectedFile) throw new Error('Önce bir GIF seç ya da sürükle.');
+        bytes = new Uint8Array(await selectedFile.arrayBuffer());
+        if (!looksLikeMedia(selectedFile.type, bytes)) throw new Error('Bu dosya bir GIF/görsel/video değil.');
+        name = (selectedFile.name || 'sticker').replace(/\.[^.]+$/, '') || 'sticker';
+      } else {
+        const u = urlInput.value.trim();
+        if (!/^https?:\/\/\S+$/i.test(u)) throw new Error('Geçerli bir link gir (https:// ile başlamalı).');
+        setStatus('GIF indiriliyor…');
+        ({ bytes, name } = await fetchMedia(u));
       }
-      const blob = await res.blob();
-      const h = (k) => res.headers.get(k);
-      const name = decodeURIComponent(h('X-Sticker-Name') || 'sticker') || 'sticker';
-      showResult(blob, {
+      const r = await convertToSticker(bytes, {
+        fit: (form.querySelector('input[name="fit"]:checked') || {}).value || 'fit',
+        start: Math.max(0, parseFloat(startInput.value) || 0),
+        onStatus: setStatus,
+      });
+      showResult(new Blob([r.data], { type: 'image/webp' }), {
         name,
-        animated: h('X-Sticker-Animated') === 'true',
-        bytes: Number(h('X-Sticker-Bytes')) || blob.size,
-        fps: h('X-Sticker-Fps'),
-        quality: h('X-Sticker-Quality'),
-        duration: Number(h('X-Sticker-Duration')) || 0,
+        animated: r.animated,
+        bytes: r.bytes,
+        fps: r.fps,
+        quality: r.quality,
+        duration: r.duration,
       });
     } catch (err) {
-      showError(err.message || 'Bağlantı hatası.');
+      console.error(err);
+      showError(err.message || 'Bir şeyler ters gitti.');
     } finally {
       setLoading(false);
     }
   });
+
+  // Kullanıcı bir şey seçer seçmez dönüştürücüyü arka planda yüklemeye başla
+  const warmUp = () => loadFFmpeg().catch(() => {});
+  fileInput.addEventListener('change', warmUp, { once: true });
+  drop.addEventListener('drop', warmUp, { once: true });
+  urlInput.addEventListener('input', warmUp, { once: true });
+  document.addEventListener('paste', warmUp, { once: true });
 
   function showResult(blob, meta) {
     if (current && !pack.some((p) => p.url === current.url)) URL.revokeObjectURL(current.url);
@@ -269,10 +276,11 @@
   function setLoading(on) {
     btn.disabled = on;
     btn.classList.toggle('loading', on);
-    btn.querySelector('.btn-label').textContent = on ? 'Dönüştürülüyor…' : 'Çıkartmaya dönüştür';
+    setStatus(on ? 'Hazırlanıyor…' : 'Çıkartmaya dönüştür');
   }
+  function setStatus(text) { btn.querySelector('.btn-label').textContent = text; }
   function showError(msg) { errorBox.textContent = msg; errorBox.hidden = false; }
   function hideError() { errorBox.hidden = true; }
   function formatBytes(n) { return n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`; }
   function safeName(s) { return (s || 'sticker').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 60) || 'sticker'; }
-})();
+}

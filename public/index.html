@@ -48,7 +48,7 @@
             <span class="field-label">GIF linki</span>
             <input type="url" id="url" inputmode="url" autocomplete="off" placeholder="https://media.giphy.com/media/…/giphy.gif" />
           </label>
-          <p class="hint">Doğrudan .gif linkleri, Giphy ve Tenor sayfa linkleri desteklenir.</p>
+          <p class="hint">Giphy linkleri (sayfa veya medya) ve doğrudan <code>.gif</code> linkleri çalışır. Tenor ve diğer sitelerde GIF'e sağ tıklayıp <i>Resim adresini kopyala</i> ile alınan linki yapıştır.</p>
         </div>
 
         <details class="opts">
@@ -127,9 +127,10 @@
     </section>
   </main>
 
-  <footer class="foot">Dosyaların sunucuda saklanmaz; dönüştürme bitince silinir.</footer>
+  <footer class="foot">Dönüştürme tamamen tarayıcında yapılır — dosyaların hiçbir sunucuya yüklenmez.<br />İlk kullanımda dönüştürücü (~30 MB) bir kez indirilir.</footer>
 
-  <script src="zip.js"></script>
-  <script src="app.js"></script>
+  <script src="js/zip.js"></script>
+  <script type="module" src="js/app.js"></script>
+  <noscript><p class="foot">Bu site JavaScript gerektirir.</p></noscript>
 </body>
 </html>
